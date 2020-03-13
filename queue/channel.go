@@ -5,6 +5,15 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
+func NewChannelQueue(maxSize int) (c IMessageContextQueue, err error) {
+	if maxSize <= 0 {
+		return nil, ErrSize
+	}
+	return &channelCache{channel: make(chan message.IMessageContext, 1)}, nil
+}
+
+//---------------------------------
+
 type channelCache struct {
 	channel chan message.IMessageContext
 }
@@ -39,7 +48,7 @@ func (c *channelCache) WriteContexts(ctx []message.IMessageContext) (count int, 
 func (c *channelCache) ReadContext() (ctx message.IMessageContext, err error) {
 	ctx = <-c.channel
 	if nil == ctx {
-		return nil, cacheCloseError
+		return nil, ErrQueueClosed
 	}
 	return
 }
@@ -50,9 +59,15 @@ func (c *channelCache) ReadContexts(count int) (ctx []message.IMessageContext, e
 	}
 	rs := make([]message.IMessageContext, count, count)
 	for i := 0; i < count; i++ {
-		rs[i] = <-c.channel
-		if rs[i] == nil {
-			return nil, cacheCloseError
+		select {
+		case val := <-c.channel:
+			if val == nil {
+				return rs[:i], ErrQueueClosed
+			} else {
+				rs[i] = val
+			}
+		default:
+			return rs[:i], ErrQueueEmpty
 		}
 	}
 	return rs, nil
@@ -69,7 +84,7 @@ func (c *channelCache) ReadContextsTo(ctx []message.IMessageContext) (count int,
 	for i := 0; i < ctxLen; i++ {
 		ctx[i] = <-c.channel
 		if ctx[i] == nil {
-			return i + 1, cacheCloseError
+			return i + 1, ErrQueueClosed
 		}
 	}
 	return
@@ -77,13 +92,4 @@ func (c *channelCache) ReadContextsTo(ctx []message.IMessageContext) (count int,
 
 func (c *channelCache) Close() {
 	close(c.channel)
-}
-
-//---------------------------------
-
-func NewChannelQueue(maxSize int) (c IContextQueue, err error) {
-	if maxSize <= 0 {
-		return nil, sizeError
-	}
-	return &channelCache{channel: make(chan message.IMessageContext, 1)}, nil
 }

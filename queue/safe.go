@@ -5,6 +5,16 @@ import (
 	"sync"
 )
 
+func NewSafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
+	us, e := NewUnsafeArrayQueue(maxSize)
+	if nil != e {
+		return nil, e
+	}
+	return &safeCache{unsafe: us.(*unsafeCache)}, nil
+}
+
+//---------------------------------
+
 type safeCache struct {
 	unsafe *unsafeCache
 
@@ -52,14 +62,4 @@ func (c *safeCache) ReadContextsTo(ctx []message.IMessageContext) (count int, er
 }
 
 func (c *safeCache) Close() {
-}
-
-//---------------------------------
-
-func NewSafeArrayQueue(maxSize int) (c IContextQueue, err error) {
-	us, e := NewUnsafeArrayQueue(maxSize)
-	if nil != e {
-		return nil, e
-	}
-	return &safeCache{unsafe: us.(*unsafeCache)}, nil
 }

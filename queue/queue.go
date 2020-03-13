@@ -5,7 +5,7 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
-type IContextReader interface {
+type IMessageContextReader interface {
 	// 向缓存区读出一个消息
 	// err: 读取异常
 	ReadContext() (ctx message.IMessageContext, err error)
@@ -19,7 +19,7 @@ type IContextReader interface {
 	ReadContextsTo(ctx []message.IMessageContext) (count int, err error)
 }
 
-type IContextWriter interface {
+type IMessageContextWriter interface {
 	// 向缓存区写入一个消息
 	// err: 写入异常
 	WriteContext(ctx message.IMessageContext) error
@@ -29,19 +29,20 @@ type IContextWriter interface {
 	WriteContexts(ctx []message.IMessageContext) (count int, err error)
 }
 
-type IContextReadWriter interface {
-	IContextReader
-	IContextWriter
+type IMessageContextReadWriter interface {
+	IMessageContextReader
+	IMessageContextWriter
 }
 
-type IContextQueue interface {
-	IContextReadWriter
+type IMessageContextQueue interface {
 	// Cache最大容量
 	MaxSize() int
 	// Cache当前容量
 	Size() int
 	// 关闭
 	Close()
+	// 读写操作
+	IMessageContextReadWriter
 }
 
 type QueueMode uint8
@@ -55,10 +56,10 @@ const (
 var (
 	cacheRegisterErr = errors.New("QueueMode Unregister! ")
 	// 函数映射表
-	cacheMap = make(map[QueueMode]func(maxSize int) (c IContextQueue, err error))
+	cacheMap = make(map[QueueMode]func(maxSize int) (c IMessageContextQueue, err error))
 )
 
-func (cm QueueMode) NewContextQueue(maxSize int) (c IContextQueue, err error) {
+func (cm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err error) {
 	if v, ok := cacheMap[cm]; ok {
 		return v(maxSize)
 	} else {
@@ -67,7 +68,7 @@ func (cm QueueMode) NewContextQueue(maxSize int) (c IContextQueue, err error) {
 }
 
 // 分组策略注册入口
-func RegisterQueueMode(m QueueMode, f func(maxSize int) (c IContextQueue, err error)) {
+func RegisterQueueMode(m QueueMode, f func(maxSize int) (c IMessageContextQueue, err error)) {
 	cacheMap[m] = f
 }
 

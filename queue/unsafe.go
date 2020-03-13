@@ -4,6 +4,19 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
+func NewUnsafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
+	if maxSize <= 0 {
+		return nil, ErrSize
+	}
+	initialCap := 256
+	if maxSize*2 > 256 {
+		initialCap = maxSize * 2
+	}
+	return &unsafeCache{max: maxSize, arr: make([]message.IMessageContext, 0, initialCap)}, nil
+}
+
+//---------------------------------
+
 type unsafeCache struct {
 	max int
 	arr []message.IMessageContext
@@ -19,7 +32,7 @@ func (c *unsafeCache) Size() int {
 
 func (c *unsafeCache) WriteContext(ctx message.IMessageContext) error {
 	if len(c.arr) >= c.max {
-		return cacheFullError
+		return ErrQueueFull
 	}
 	c.arr = append(c.arr, ctx)
 	return nil
@@ -35,7 +48,7 @@ func (c *unsafeCache) WriteContexts(ctx []message.IMessageContext) (count int, e
 	}
 	cLen := len(c.arr)
 	if cLen >= c.max {
-		return -1, cacheFullError
+		return -1, ErrQueueFull
 	}
 	if cLen+ctxLen <= c.max {
 		count = ctxLen
@@ -48,7 +61,7 @@ func (c *unsafeCache) WriteContexts(ctx []message.IMessageContext) (count int, e
 
 func (c *unsafeCache) ReadContext() (ctx message.IMessageContext, err error) {
 	if len(c.arr) == 0 {
-		return nil, cacheEmptyError
+		return nil, ErrQueueEmpty
 	}
 	ctx = c.arr[0]
 	c.arr = c.arr[1:]
@@ -58,7 +71,7 @@ func (c *unsafeCache) ReadContext() (ctx message.IMessageContext, err error) {
 func (c *unsafeCache) ReadContexts(count int) (ctx []message.IMessageContext, err error) {
 	cLen := len(c.arr)
 	if cLen == 0 {
-		return nil, cacheEmptyError
+		return nil, ErrQueueEmpty
 	}
 	if cLen < count {
 		count = cLen
@@ -89,17 +102,4 @@ func (c *unsafeCache) ReadContextsTo(ctx []message.IMessageContext) (count int, 
 }
 
 func (c *unsafeCache) Close() {
-}
-
-//---------------------------------
-
-func NewUnsafeArrayQueue(maxSize int) (c IContextQueue, err error) {
-	if maxSize <= 0 {
-		return nil, sizeError
-	}
-	initialCap := 256
-	if maxSize*2 > 256 {
-		initialCap = maxSize * 2
-	}
-	return &unsafeCache{max: maxSize, arr: make([]message.IMessageContext, 0, initialCap)}, nil
 }
