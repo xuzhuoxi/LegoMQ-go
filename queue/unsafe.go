@@ -5,6 +5,10 @@ import (
 )
 
 func NewUnsafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
+	return newUnsafeArrayQueue(maxSize)
+}
+
+func newUnsafeArrayQueue(maxSize int) (c *unsafeCache, err error) {
 	if maxSize <= 0 {
 		return nil, ErrSize
 	}
@@ -18,8 +22,17 @@ func NewUnsafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
 //---------------------------------
 
 type unsafeCache struct {
+	id  string
 	max int
 	arr []message.IMessageContext
+}
+
+func (c *unsafeCache) Id() string {
+	return c.id
+}
+
+func (c *unsafeCache) SetId(Id string) {
+	c.id = Id
 }
 
 func (c *unsafeCache) MaxSize() int {
@@ -31,6 +44,9 @@ func (c *unsafeCache) Size() int {
 }
 
 func (c *unsafeCache) WriteContext(ctx message.IMessageContext) error {
+	if nil == ctx {
+		return message.ErrMessageContextNil
+	}
 	if len(c.arr) >= c.max {
 		return ErrQueueFull
 	}
@@ -39,24 +55,22 @@ func (c *unsafeCache) WriteContext(ctx message.IMessageContext) error {
 }
 
 func (c *unsafeCache) WriteContexts(ctx []message.IMessageContext) (count int, err error) {
-	if nil == ctx {
-		return 0, inputCtxArrayNilError
-	}
 	ctxLen := len(ctx)
 	if 0 == ctxLen {
-		return 0, nil
+		return 0, ErrQueueCountZero
 	}
-	cLen := len(c.arr)
-	if cLen >= c.max {
-		return -1, ErrQueueFull
+	for idx, _ := range ctx {
+		if len(c.arr) == c.max {
+			break
+		}
+		if nil == ctx[idx] {
+			err = message.ErrMessageContextNil
+			continue
+		}
+		c.arr = append(c.arr, ctx[idx])
+		count += 1
 	}
-	if cLen+ctxLen <= c.max {
-		count = ctxLen
-	} else {
-		count = c.max - cLen
-	}
-	c.arr = append(c.arr, ctx[:count]...)
-	return count, nil
+	return
 }
 
 func (c *unsafeCache) ReadContext() (ctx message.IMessageContext, err error) {
@@ -69,6 +83,9 @@ func (c *unsafeCache) ReadContext() (ctx message.IMessageContext, err error) {
 }
 
 func (c *unsafeCache) ReadContexts(count int) (ctx []message.IMessageContext, err error) {
+	if count <= 0 {
+		return nil, ErrQueueCountZero
+	}
 	cLen := len(c.arr)
 	if cLen == 0 {
 		return nil, ErrQueueEmpty
@@ -77,18 +94,15 @@ func (c *unsafeCache) ReadContexts(count int) (ctx []message.IMessageContext, er
 		count = cLen
 	}
 	ctx = make([]message.IMessageContext, count, count)
-	copy(ctx, c.arr[:count:count])
+	copy(ctx, c.arr[:count])
 	c.arr = c.arr[count:]
 	return
 }
 
 func (c *unsafeCache) ReadContextsTo(ctx []message.IMessageContext) (count int, err error) {
-	if nil == ctx {
-		return -1, outputCtxArrayNilError
-	}
 	ctxLen := len(ctx)
 	if 0 == ctxLen {
-		return 0, nil
+		return 0, ErrQueueCountZero
 	}
 	cLen := len(c.arr)
 	if cLen < ctxLen {
@@ -96,7 +110,7 @@ func (c *unsafeCache) ReadContextsTo(ctx []message.IMessageContext) (count int, 
 	} else {
 		count = ctxLen
 	}
-	copy(ctx, c.arr[:count:count])
+	copy(ctx, c.arr[:count])
 	c.arr = c.arr[count:]
 	return
 }

@@ -6,19 +6,27 @@ import (
 )
 
 func NewSafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
-	us, e := NewUnsafeArrayQueue(maxSize)
+	us, e := newUnsafeArrayQueue(maxSize)
 	if nil != e {
 		return nil, e
 	}
-	return &safeCache{unsafe: us.(*unsafeCache)}, nil
+	return &safeCache{unsafe: *us}, nil
 }
 
 //---------------------------------
 
 type safeCache struct {
-	unsafe *unsafeCache
+	unsafe unsafeCache
 
 	mu sync.RWMutex
+}
+
+func (c *safeCache) Id() string {
+	return c.unsafe.Id()
+}
+
+func (c *safeCache) SetId(Id string) {
+	c.unsafe.SetId(Id)
 }
 
 func (c *safeCache) MaxSize() int {

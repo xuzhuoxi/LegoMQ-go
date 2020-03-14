@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
@@ -16,6 +15,15 @@ func NewChannelQueue(maxSize int) (c IMessageContextQueue, err error) {
 
 type channelCache struct {
 	channel chan message.IMessageContext
+	id      string
+}
+
+func (c *channelCache) Id() string {
+	return c.id
+}
+
+func (c *channelCache) SetId(Id string) {
+	c.id = Id
 }
 
 func (c *channelCache) MaxSize() int {
@@ -27,24 +35,30 @@ func (c *channelCache) Size() int {
 }
 
 func (c *channelCache) WriteContext(ctx message.IMessageContext) error {
+	if nil == ctx {
+		return message.ErrMessageContextNil
+	}
 	c.channel <- ctx
 	return nil
 }
 
 func (c *channelCache) WriteContexts(ctx []message.IMessageContext) (count int, err error) {
-	if nil == ctx {
-		return 0, inputCtxArrayNilError
-	}
 	ctxLen := len(ctx)
 	if 0 == ctxLen {
-		return 0, nil
+		return 0, ErrQueueCountZero
 	}
 	for idx, _ := range ctx {
+		if nil == ctx[idx] {
+			err = message.ErrMessageContextNil
+			continue
+		}
 		c.channel <- ctx[idx]
+		count += 1
 	}
-	return ctxLen, nil
+	return
 }
 
+// 阻塞
 func (c *channelCache) ReadContext() (ctx message.IMessageContext, err error) {
 	ctx = <-c.channel
 	if nil == ctx {
@@ -53,9 +67,10 @@ func (c *channelCache) ReadContext() (ctx message.IMessageContext, err error) {
 	return
 }
 
+// 非阻塞
 func (c *channelCache) ReadContexts(count int) (ctx []message.IMessageContext, err error) {
 	if count < 1 {
-		return nil, errors.New("Count should >0. ")
+		return nil, ErrQueueCountZero
 	}
 	rs := make([]message.IMessageContext, count, count)
 	for i := 0; i < count; i++ {
@@ -73,18 +88,22 @@ func (c *channelCache) ReadContexts(count int) (ctx []message.IMessageContext, e
 	return rs, nil
 }
 
+// 非阻塞
 func (c *channelCache) ReadContextsTo(ctx []message.IMessageContext) (count int, err error) {
-	if nil == ctx {
-		return -1, outputCtxArrayNilError
-	}
 	ctxLen := len(ctx)
 	if 0 == ctxLen {
-		return 0, nil
+		return 0, ErrQueueCountZero
 	}
 	for i := 0; i < ctxLen; i++ {
-		ctx[i] = <-c.channel
-		if ctx[i] == nil {
-			return i + 1, ErrQueueClosed
+		select {
+		case val := <-c.channel:
+			if val == nil {
+				return i, ErrQueueClosed
+			} else {
+				ctx[i] = val
+			}
+		default:
+			return i, ErrQueueEmpty
 		}
 	}
 	return
