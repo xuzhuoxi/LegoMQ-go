@@ -1,33 +1,28 @@
 package producer
 
 import (
-	"github.com/xuzhuoxi/LegoMQ-go/broker"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
 )
 
-func NewRPCMessageProducer() broker.IRPCMessageProducer {
+func NewRPCMessageProducer() IRPCMessageProducer {
 	rpcServer := netx.NewRPCServer()
 	return &rpcMessageProducer{rpcServer: rpcServer}
 }
 
 type rpcMessageProducer struct {
+	eventx.EventDispatcher
 	rpcServer netx.IRPCServer
-	queue     broker.IMessageQueue
 }
 
-func (b *rpcMessageProducer) SetMessageQueue(queue broker.IMessageQueue) {
-	b.queue = queue
-}
-
-func (b *rpcMessageProducer) ProduceMessage(msg message.IMessageContext) error {
-	if nil == b.queue {
-		return broker.ErrQueueNotPrepared
+func (b *rpcMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
+	if nil == msg {
+		return message.ErrMessageContextNil
 	}
-	b.queue.WriteMessage(msg)
+	b.notifyMsgProduced(msg)
 	return nil
 }
-
 func (b *rpcMessageProducer) RPCServer() netx.IRPCServer {
 	return b.rpcServer
 }
@@ -44,4 +39,8 @@ func (b *rpcMessageProducer) StartRPCListener(addr string) error {
 func (b *rpcMessageProducer) StopRPCListener() error {
 	b.rpcServer.StopServer()
 	return nil
+}
+
+func (b *rpcMessageProducer) notifyMsgProduced(msg message.IMessageContext) {
+	b.DispatchEvent(EventOnProducer, b, msg)
 }
