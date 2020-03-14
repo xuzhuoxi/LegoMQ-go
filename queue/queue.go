@@ -7,14 +7,15 @@ import (
 )
 
 var (
-	ErrQueueClosed    = errors.New("ContextQueue is closed! ")
-	ErrQueueFull      = errors.New("ContextQueue is Full! ")
-	ErrQueueEmpty     = errors.New("ContextQueue is Empty! ")
-	ErrQueueCountZero = errors.New("Count is <= 0! ")
+	ErrQueueClosed = errors.New("ContextQueue is closed! ")
+	ErrQueueFull   = errors.New("ContextQueue is Full! ")
+	ErrQueueEmpty  = errors.New("ContextQueue is Empty! ")
 )
 
 var (
-	ErrSize              = errors.New("Max size should be larger than 0. ")
+	ErrQueueMessageNil   = errors.New("ContextQueue: Message is nil! ")
+	ErrQueueCountZero    = errors.New("ContextQueue: Count is <= 0! ")
+	ErrSize              = errors.New("ContextQueue: Max size should be larger than 0. ")
 	ErrQueueModeRegister = errors.New("QueueMode Unregister! ")
 )
 
@@ -43,13 +44,13 @@ type IMessageContextQueueReader interface {
 type IMessageContextQueueWriter interface {
 	// 向缓存区写入一个消息
 	// err: 写入异常
-	//		ctx为nil：ErrMessageContextNil
+	//		ctx为nil：ErrQueueMessageNil
 	//		队列满：ErrQueueFull
 	WriteContext(ctx message.IMessageContext) error
 	// 向缓存区写入多个消息
 	// count: 返回实际写入数量
 	// err: 写入异常
-	//		ctx包含nil：ErrMessageContextNil
+	//		ctx包含nil：ErrQueueMessageNil
 	//		ctx数量异常：ErrQueueCountZero
 	//		队列满：ErrQueueFull
 	WriteContexts(ctx []message.IMessageContext) (count int, err error)

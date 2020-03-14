@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
@@ -8,17 +9,28 @@ import (
 )
 
 const (
-	EventOnProducer string = "producer.EventOnProducer"
+	EventMessageOnProducer      string = "producer.EventMessageOnProducer"
+	EventMultiMessageOnProducer string = "producer.EventMultiMessageOnProducer"
+)
+
+var (
+	ErrProducerMessageNil    = errors.New("MessageProducer: Message is nil! ")
+	ErrProducerMessagesEmpty = errors.New("MessageProducer: Message array is empty! ")
 )
 
 // 消息生产者
 type IMessageProducer interface {
 	eventx.IEventDispatcher
 	// 生产消息
-	// 抛出事件EventOnProducer
+	// 抛出事件 EventMessageOnProducer
 	// err:
-	//		msg为nil时ErrMessageContextNil
+	//		msg为nil时ErrProducerMessageNil
 	NotifyMessageProduced(msg message.IMessageContext) error
+	// 生产消息
+	// 抛出事件 EventMultiMessageOnProducer
+	// err:
+	//		msg长度为0时ErrProducerMessagesEmpty
+	NotifyMessagesProduced(msg []message.IMessageContext) error
 }
 
 // Socket服务消息生成者

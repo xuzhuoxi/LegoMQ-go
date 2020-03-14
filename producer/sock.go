@@ -21,9 +21,17 @@ type sockMessageProducer struct {
 
 func (p *sockMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
 	if nil == msg {
-		return message.ErrMessageContextNil
+		return ErrProducerMessagesEmpty
 	}
 	p.notifyMsgProduced(msg)
+	return nil
+}
+
+func (p *sockMessageProducer) NotifyMessagesProduced(msg []message.IMessageContext) error {
+	if len(msg) == 0 {
+		return ErrProducerMessagesEmpty
+	}
+	p.notifyMultiMsgProduced(msg)
 	return nil
 }
 
@@ -49,7 +57,11 @@ func (p *sockMessageProducer) StopSockListener() error {
 }
 
 func (p *sockMessageProducer) notifyMsgProduced(msg message.IMessageContext) {
-	p.DispatchEvent(EventOnProducer, p, msg)
+	p.DispatchEvent(EventMessageOnProducer, p, msg)
+}
+
+func (p *sockMessageProducer) notifyMultiMsgProduced(msg []message.IMessageContext) {
+	p.DispatchEvent(EventMultiMessageOnProducer, p, msg)
 }
 
 func (p *sockMessageProducer) onSockPackTest(data []byte, senderAddress string, other interface{}) (catch bool) {

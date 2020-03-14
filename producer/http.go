@@ -19,9 +19,17 @@ type httpMessageProducer struct {
 
 func (p *httpMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
 	if nil == msg {
-		return message.ErrMessageContextNil
+		return ErrProducerMessageNil
 	}
 	p.notifyMsgProduced(msg)
+	return nil
+}
+
+func (p *httpMessageProducer) NotifyMessagesProduced(msg []message.IMessageContext) error {
+	if len(msg) == 0 {
+		return ErrProducerMessagesEmpty
+	}
+	p.notifyMultiMsgProduced(msg)
 	return nil
 }
 
@@ -46,7 +54,11 @@ func (p *httpMessageProducer) StopHttpListener() error {
 }
 
 func (p *httpMessageProducer) notifyMsgProduced(msg message.IMessageContext) {
-	p.DispatchEvent(EventOnProducer, p, msg)
+	p.DispatchEvent(EventMessageOnProducer, p, msg)
+}
+
+func (p *httpMessageProducer) notifyMultiMsgProduced(msg []message.IMessageContext) {
+	p.DispatchEvent(EventMultiMessageOnProducer, p, msg)
 }
 
 //------------------

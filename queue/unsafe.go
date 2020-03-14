@@ -45,7 +45,7 @@ func (c *unsafeCache) Size() int {
 
 func (c *unsafeCache) WriteContext(ctx message.IMessageContext) error {
 	if nil == ctx {
-		return message.ErrMessageContextNil
+		return ErrQueueMessageNil
 	}
 	if len(c.arr) >= c.max {
 		return ErrQueueFull
@@ -64,7 +64,7 @@ func (c *unsafeCache) WriteContexts(ctx []message.IMessageContext) (count int, e
 			break
 		}
 		if nil == ctx[idx] {
-			err = message.ErrMessageContextNil
+			err = ErrQueueMessageNil
 			continue
 		}
 		c.arr = append(c.arr, ctx[idx])

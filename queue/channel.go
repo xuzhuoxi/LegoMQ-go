@@ -36,7 +36,7 @@ func (c *channelCache) Size() int {
 
 func (c *channelCache) WriteContext(ctx message.IMessageContext) error {
 	if nil == ctx {
-		return message.ErrMessageContextNil
+		return ErrQueueMessageNil
 	}
 	c.channel <- ctx
 	return nil
@@ -49,7 +49,7 @@ func (c *channelCache) WriteContexts(ctx []message.IMessageContext) (count int, 
 	}
 	for idx, _ := range ctx {
 		if nil == ctx[idx] {
-			err = message.ErrMessageContextNil
+			err = ErrQueueMessageNil
 			continue
 		}
 		c.channel <- ctx[idx]

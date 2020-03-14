@@ -16,31 +16,44 @@ type rpcMessageProducer struct {
 	rpcServer netx.IRPCServer
 }
 
-func (b *rpcMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
+func (p *rpcMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
 	if nil == msg {
-		return message.ErrMessageContextNil
+		return ErrProducerMessageNil
 	}
-	b.notifyMsgProduced(msg)
-	return nil
-}
-func (b *rpcMessageProducer) RPCServer() netx.IRPCServer {
-	return b.rpcServer
-}
-
-func (b *rpcMessageProducer) Register(rcvr interface{}) error {
-	return b.rpcServer.Register(rcvr)
-}
-
-func (b *rpcMessageProducer) StartRPCListener(addr string) error {
-	go b.rpcServer.StartServer(addr)
+	p.notifyMsgProduced(msg)
 	return nil
 }
 
-func (b *rpcMessageProducer) StopRPCListener() error {
-	b.rpcServer.StopServer()
+func (p *rpcMessageProducer) NotifyMessagesProduced(msg []message.IMessageContext) error {
+	if len(msg) == 0 {
+		return ErrProducerMessagesEmpty
+	}
+	p.notifyMultiMsgProduced(msg)
 	return nil
 }
 
-func (b *rpcMessageProducer) notifyMsgProduced(msg message.IMessageContext) {
-	b.DispatchEvent(EventOnProducer, b, msg)
+func (p *rpcMessageProducer) RPCServer() netx.IRPCServer {
+	return p.rpcServer
+}
+
+func (p *rpcMessageProducer) Register(rcvr interface{}) error {
+	return p.rpcServer.Register(rcvr)
+}
+
+func (p *rpcMessageProducer) StartRPCListener(addr string) error {
+	go p.rpcServer.StartServer(addr)
+	return nil
+}
+
+func (p *rpcMessageProducer) StopRPCListener() error {
+	p.rpcServer.StopServer()
+	return nil
+}
+
+func (p *rpcMessageProducer) notifyMsgProduced(msg message.IMessageContext) {
+	p.DispatchEvent(EventMessageOnProducer, p, msg)
+}
+
+func (p *rpcMessageProducer) notifyMultiMsgProduced(msg []message.IMessageContext) {
+	p.DispatchEvent(EventMultiMessageOnProducer, p, msg)
 }
