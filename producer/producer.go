@@ -16,6 +16,7 @@ const (
 var (
 	ErrProducerMessageNil    = errors.New("MessageProducer: Message is nil! ")
 	ErrProducerMessagesEmpty = errors.New("MessageProducer: Message array is empty! ")
+	ErrProducerModeRegister  = errors.New("MessageProducer: ProducerMode Unregister! ")
 )
 
 // 消息生产者
@@ -36,6 +37,8 @@ type IMessageProducer interface {
 // Socket服务消息生成者
 type ISockMessageProducer interface {
 	IMessageProducer
+	// 初始化服务实例
+	InitSockServer(sockNetwork netx.SockNetwork) (s netx.ISockServer, err error)
 	// Socket服务器
 	SockServer() netx.ISockServer
 	// 追加Socket服务器接收的信息的处理函数
@@ -70,4 +73,37 @@ type IRPCMessageProducer interface {
 	StartRPCListener(addr string) error
 	// 停止RPC服务器
 	StopRPCListener() error
+}
+
+type ProducerMode int
+
+const (
+	HttpProducer ProducerMode = iota + 1
+	SockProducer
+	RPCProducer
+	CustomizeProducer
+)
+
+var (
+	// 函数映射表
+	producerMap = make(map[ProducerMode]func() IMessageProducer)
+)
+
+func (cm ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
+	if v, ok := producerMap[cm]; ok {
+		return v(), nil
+	} else {
+		return nil, ErrProducerModeRegister
+	}
+}
+
+// 分组策略注册入口
+func RegisterProducerMode(m ProducerMode, f func() IMessageProducer) {
+	producerMap[m] = f
+}
+
+func init() {
+	RegisterProducerMode(HttpProducer, newHttpMessageProducer)
+	RegisterProducerMode(SockProducer, newSockMessageProducer)
+	RegisterProducerMode(RPCProducer, newRPCMessageProducer)
 }

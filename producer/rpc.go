@@ -7,9 +7,15 @@ import (
 )
 
 func NewRPCMessageProducer() IRPCMessageProducer {
+	return newRPCMessageProducer().(IRPCMessageProducer)
+}
+
+func newRPCMessageProducer() IMessageProducer {
 	rpcServer := netx.NewRPCServer()
 	return &rpcMessageProducer{rpcServer: rpcServer}
 }
+
+//------------------
 
 type rpcMessageProducer struct {
 	eventx.EventDispatcher

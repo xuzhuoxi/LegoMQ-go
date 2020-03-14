@@ -14,6 +14,12 @@ func NewSockMessageProducer(sockNetwork netx.SockNetwork) (p ISockMessageProduce
 	return &sockMessageProducer{sockServer: sockServer}, nil
 }
 
+func newSockMessageProducer() IMessageProducer {
+	return &sockMessageProducer{}
+}
+
+//------------------
+
 type sockMessageProducer struct {
 	eventx.EventDispatcher
 	sockServer netx.ISockServer
@@ -33,6 +39,15 @@ func (p *sockMessageProducer) NotifyMessagesProduced(msg []message.IMessageConte
 	}
 	p.notifyMultiMsgProduced(msg)
 	return nil
+}
+
+func (p *sockMessageProducer) InitSockServer(sockNetwork netx.SockNetwork) (s netx.ISockServer, err error) {
+	s, err = sockNetwork.NewServer()
+	if nil != err {
+		return nil, err
+	}
+	p.sockServer = s
+	return
 }
 
 func (p *sockMessageProducer) SockServer() netx.ISockServer {

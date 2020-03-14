@@ -8,9 +8,15 @@ import (
 )
 
 func NewHttpMessageProducer() IHttpMessageProducer {
+	return newHttpMessageProducer().(IHttpMessageProducer)
+}
+
+func newHttpMessageProducer() IMessageProducer {
 	httpServer := netx.NewHttpServer()
 	return &httpMessageProducer{httpServer: httpServer}
 }
+
+//------------------
 
 type httpMessageProducer struct {
 	eventx.EventDispatcher

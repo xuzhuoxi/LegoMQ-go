@@ -73,9 +73,14 @@ type IMessageContextQueue interface {
 type QueueMode int
 
 const (
+	// 使用channel实现的队列
 	ChannelQueue QueueMode = iota + 1
+	// 使用数组实现的队列
 	ArrayQueueUnsafe
+	// 使用数组实现的队列(并发安全)
 	ArrayQueueSafe
+	// 自定义队列
+	CustomizeQueue
 )
 
 type QueueSetting struct {
@@ -86,11 +91,11 @@ type QueueSetting struct {
 
 var (
 	// 函数映射表
-	cacheMap = make(map[QueueMode]func(maxSize int) (c IMessageContextQueue, err error))
+	queueMap = make(map[QueueMode]func(maxSize int) (c IMessageContextQueue, err error))
 )
 
-func (cm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err error) {
-	if v, ok := cacheMap[cm]; ok {
+func (qm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err error) {
+	if v, ok := queueMap[qm]; ok {
 		return v(maxSize)
 	} else {
 		return nil, ErrQueueModeRegister
@@ -108,7 +113,7 @@ func NewContextQueue(setting QueueSetting) (c IMessageContextQueue, err error) {
 
 // 分组策略注册入口
 func RegisterQueueMode(m QueueMode, f func(maxSize int) (c IMessageContextQueue, err error)) {
-	cacheMap[m] = f
+	queueMap[m] = f
 }
 
 func init() {
