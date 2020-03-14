@@ -13,10 +13,10 @@ var (
 )
 
 var (
-	ErrQueueMessageNil   = errors.New("ContextQueue: Message is nil! ")
-	ErrQueueCountZero    = errors.New("ContextQueue: Count is <= 0! ")
-	ErrSize              = errors.New("ContextQueue: Max size should be larger than 0. ")
-	ErrQueueModeRegister = errors.New("QueueMode Unregister! ")
+	ErrQueueMessageNil     = errors.New("ContextQueue: Message is nil! ")
+	ErrQueueCountZero      = errors.New("ContextQueue: Count is <= 0! ")
+	ErrSize                = errors.New("ContextQueue: Max size should be larger than 0. ")
+	ErrQueueModeUnregister = errors.New("QueueMode Unregister! ")
 )
 
 type IMessageContextQueueReader interface {
@@ -98,7 +98,7 @@ func (qm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err er
 	if v, ok := queueMap[qm]; ok {
 		return v(maxSize)
 	} else {
-		return nil, ErrQueueModeRegister
+		return nil, ErrQueueModeUnregister
 	}
 }
 
@@ -111,7 +111,7 @@ func NewContextQueue(setting QueueSetting) (c IMessageContextQueue, err error) {
 	return q, nil
 }
 
-// 分组策略注册入口
+// 注册
 func RegisterQueueMode(m QueueMode, f func(maxSize int) (c IMessageContextQueue, err error)) {
 	queueMap[m] = f
 }

@@ -26,11 +26,11 @@ type IMessageQueueGroupConfig interface {
 	QueueIds() []string
 	// 创建一个队列，id使用默认规则创建
 	// err:
-	// 		QueueMode未注册时返回 ErrQueueModeRegister
+	// 		QueueMode未注册时返回 ErrQueueModeUnregister
 	CreateQueue(mode QueueMode, size int) (queue IMessageContextQueue, err error)
 	// 创建一个队列，id使用默认规则创建
 	// err:
-	// 		QueueMode未注册时返回 ErrQueueModeRegister
+	// 		QueueMode未注册时返回 ErrQueueModeUnregister
 	CreateQueues(modes []QueueMode, size int) (queues []IMessageContextQueue, err error)
 	// 加入一个队列
 	// err:

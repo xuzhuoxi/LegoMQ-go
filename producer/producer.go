@@ -14,9 +14,9 @@ const (
 )
 
 var (
-	ErrProducerMessageNil    = errors.New("MessageProducer: Message is nil! ")
-	ErrProducerMessagesEmpty = errors.New("MessageProducer: Message array is empty! ")
-	ErrProducerModeRegister  = errors.New("MessageProducer: ProducerMode Unregister! ")
+	ErrProducerMessageNil     = errors.New("MessageProducer: Message is nil! ")
+	ErrProducerMessagesEmpty  = errors.New("MessageProducer: Message array is empty! ")
+	ErrProducerModeUnregister = errors.New("MessageProducer: ProducerMode Unregister! ")
 )
 
 // 消息生产者
@@ -93,11 +93,11 @@ func (cm ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
 	if v, ok := producerMap[cm]; ok {
 		return v(), nil
 	} else {
-		return nil, ErrProducerModeRegister
+		return nil, ErrProducerModeUnregister
 	}
 }
 
-// 分组策略注册入口
+// 注册
 func RegisterProducerMode(m ProducerMode, f func() IMessageProducer) {
 	producerMap[m] = f
 }
