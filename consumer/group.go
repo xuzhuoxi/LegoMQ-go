@@ -73,9 +73,9 @@ type IMessageConsumerGroup interface {
 	ConsumeMessages(msg []message.IMessageContext, consumerId string) error
 }
 
-func NewMessageConsumerGroup() IMessageConsumerGroup {
+func NewMessageConsumerGroup() (config IMessageConsumerGroupConfig, group IMessageConsumerGroup) {
 	rs := &consumerGroup{}
-	return rs
+	return rs, rs
 }
 
 //---------------------

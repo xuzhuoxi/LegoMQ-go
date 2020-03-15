@@ -53,9 +53,9 @@ func (c *printConsumer) funcHandleContext(msg message.IMessageContext) error {
 	}
 	switch a := msg.(type) {
 	case fmt.Stringer:
-		fmt.Println(a.String())
+		fmt.Println("Stringer:", a.String())
 	default:
-		fmt.Println(msg.Body())
+		fmt.Println("Body:", msg.Body())
 	}
 	return nil
 }

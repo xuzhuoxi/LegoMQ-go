@@ -11,29 +11,31 @@ func NewLogConsumer() ILogMessageConsumer {
 }
 
 func newLogConsumer() IMessageConsumer {
-	rs := &loggerConsumer{logger: logx.NewLogger()}
+	rs := &logConsumer{logger: logx.NewLogger()}
+	rs.level = logx.LevelTrace
+	rs.logger.SetConfig(logx.LogConfig{Type: logx.TypeConsole, Level: logx.LevelAll})
 	return rs
 }
 
-type loggerConsumer struct {
+type logConsumer struct {
 	id     string
 	logger logx.ILogger
 	level  logx.LogLevel
 }
 
-func (c *loggerConsumer) Id() string {
+func (c *logConsumer) Id() string {
 	return c.id
 }
 
-func (c *loggerConsumer) SetId(Id string) {
+func (c *logConsumer) SetId(Id string) {
 	c.id = Id
 }
 
-func (c *loggerConsumer) ConsumeMessage(msg message.IMessageContext) error {
+func (c *logConsumer) ConsumeMessage(msg message.IMessageContext) error {
 	return c.funcHandleContext(msg)
 }
 
-func (c *loggerConsumer) ConsumeMessages(msg []message.IMessageContext) (err error) {
+func (c *logConsumer) ConsumeMessages(msg []message.IMessageContext) (err error) {
 	if 0 == len(msg) {
 		return ErrConsumerMessagesEmpty
 	}
@@ -46,15 +48,15 @@ func (c *loggerConsumer) ConsumeMessages(msg []message.IMessageContext) (err err
 	return
 }
 
-func (c *loggerConsumer) SetConsumerLevel(level logx.LogLevel) {
+func (c *logConsumer) SetConsumerLevel(level logx.LogLevel) {
 	c.level = level
 }
 
-func (c *loggerConsumer) GetLogger() logx.ILogger {
+func (c *logConsumer) GetLogger() logx.ILogger {
 	return c.logger
 }
 
-func (c *loggerConsumer) funcHandleContext(msg message.IMessageContext) error {
+func (c *logConsumer) funcHandleContext(msg message.IMessageContext) error {
 	if nil == msg {
 		return ErrConsumerMessageNil
 	}
