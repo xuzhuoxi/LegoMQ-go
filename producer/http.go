@@ -20,7 +20,17 @@ func newHttpMessageProducer() IMessageProducer {
 
 type httpMessageProducer struct {
 	eventx.EventDispatcher
+
+	id         string
 	httpServer netx.IHttpServer
+}
+
+func (p *httpMessageProducer) Id() string {
+	return p.id
+}
+
+func (p *httpMessageProducer) SetId(Id string) {
+	p.id = Id
 }
 
 func (p *httpMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {

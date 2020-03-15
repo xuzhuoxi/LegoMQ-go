@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	ErrConsumerNil       = errors.New("MessageConsumer: Message is nil. ")
-	ErrConsumerIdExists  = errors.New("MessageConsumer: Message is nil. ")
-	ErrConsumerIdUnknown = errors.New("MessageConsumer: Message is nil. ")
+	ErrConsumerNil        = errors.New("MessageConsumer: Consumer is nil. ")
+	ErrConsumerIdExists   = errors.New("MessageConsumer: ConsumerId exists. ")
+	ErrConsumerIdUnknown  = errors.New("MessageConsumer: ConsumerId unknown. ")
+	ErrConsumerIndexRange = errors.New("MessageConsumer: Index out of range. ")
 )
 
 type IMessageConsumerGroupConfig interface {
@@ -20,7 +21,7 @@ type IMessageConsumerGroupConfig interface {
 	// 消费者标识信息
 	ConsumerIds() []string
 
-	// 创建一个消息，id使用默认规则创建
+	// 创建一个消费者，id使用默认规则创建
 	// err:
 	// 		ErrConsumerModeUnregister:	ConsumerMode未注册
 	CreateConsumer(mode ConsumerMode) (consumer IMessageConsumer, err error)
@@ -60,16 +61,28 @@ type IMessageConsumerGroupConfig interface {
 	// 		ErrConsumerNil:			Consumer为nil
 	UpdateConsumers(consumers []IMessageConsumer) (err []error)
 	// 使用配置初始化消费者组，覆盖旧配置
-	InitConsumerGroup(settings []ConsumerSetting) error
+	InitConsumerGroup(settings []ConsumerSetting) (consumers []IMessageConsumer, err error)
 }
 
 type IMessageConsumerGroup interface {
+	// 取生成者
+	// err:
+	// 		ErrConsumerIdUnknown:	ConsumerId不存在
+	GetConsumer(producerId string) (IMessageConsumer, error)
+	// 取生成者
+	// err:
+	// 		ErrConsumerIndexRange:	index越界
+	GetConsumerAt(index int) (IMessageConsumer, error)
 	// 被动接收一个消息并进行处理
 	// err:
 	// 		ErrConsumerMessageNil: msg=nil时
 	// 		ErrConsumerIdUnknown: ConsumerId不存在
 	ConsumeMessage(msg message.IMessageContext, consumerId string) error
 	// 被动接收多个消息并进行处理
+	// err:
+	//		ErrConsumerMessagesEmpty: msg长度为0
+	// 		ErrConsumerIdUnknown: ConsumerId不存在
+	//		其它错误
 	ConsumeMessages(msg []message.IMessageContext, consumerId string) error
 }
 
@@ -205,29 +218,28 @@ func (g *consumerGroup) UpdateConsumers(consumers []IMessageConsumer) (err []err
 	return
 }
 
-func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) error {
+func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) (consumers []IMessageConsumer, err error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	group := *collectionx.NewOrderHashGroup()
 	if len(settings) == 0 {
-		return nil
+		return nil, nil
 	}
 	for idx, _ := range settings {
 		consumer, err := settings[idx].Mode.NewMessageConsumer()
 		if nil != err {
-			return err
+			return nil, err
 		}
 		consumer.SetId(settings[idx].Id)
 		err = group.Add(consumer)
 		if nil != err {
-			return err
+			return nil, err
 		}
+		consumers = append(consumers, consumer)
 	}
 	g.group = group
-	return nil
+	return consumers, nil
 }
-
-//----------------------
 
 func (g *consumerGroup) ConsumeMessage(msg message.IMessageContext, consumerId string) error {
 	if nil == msg {
@@ -242,9 +254,31 @@ func (g *consumerGroup) ConsumeMessage(msg message.IMessageContext, consumerId s
 	return ele.(IMessageConsumer).ConsumeMessage(msg)
 }
 
+//----------------------
+
+func (g *consumerGroup) GetConsumer(producerId string) (IMessageConsumer, error) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	if ele, ok := g.group.Get(producerId); ok {
+		return ele.(IMessageConsumer), nil
+	} else {
+		return nil, ErrConsumerIdUnknown
+	}
+}
+
+func (g *consumerGroup) GetConsumerAt(index int) (IMessageConsumer, error) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	if ele, ok := g.group.GetAt(index); ok {
+		return ele.(IMessageConsumer), nil
+	} else {
+		return nil, ErrConsumerIdUnknown
+	}
+}
+
 func (g *consumerGroup) ConsumeMessages(msg []message.IMessageContext, consumerId string) error {
 	if 0 == len(msg) {
-		return ErrConsumerMessageNil
+		return ErrConsumerMessagesEmpty
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()

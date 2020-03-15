@@ -19,7 +19,16 @@ func newRPCMessageProducer() IMessageProducer {
 
 type rpcMessageProducer struct {
 	eventx.EventDispatcher
+	id        string
 	rpcServer netx.IRPCServer
+}
+
+func (p *rpcMessageProducer) Id() string {
+	return p.id
+}
+
+func (p *rpcMessageProducer) SetId(Id string) {
+	p.id = Id
 }
 
 func (p *rpcMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {

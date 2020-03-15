@@ -22,7 +22,17 @@ func newSockMessageProducer() IMessageProducer {
 
 type sockMessageProducer struct {
 	eventx.EventDispatcher
+
+	id         string
 	sockServer netx.ISockServer
+}
+
+func (p *sockMessageProducer) Id() string {
+	return p.id
+}
+
+func (p *sockMessageProducer) SetId(Id string) {
+	p.id = Id
 }
 
 func (p *sockMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {

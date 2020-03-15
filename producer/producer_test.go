@@ -1,4 +1,4 @@
-package consumer
+package producer
 
 import "github.com/xuzhuoxi/LegoMQ-go/message"
 

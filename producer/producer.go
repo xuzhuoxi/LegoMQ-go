@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
+	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"net/http"
 )
@@ -21,6 +22,7 @@ var (
 
 // 消息生产者
 type IMessageProducer interface {
+	collectionx.IOrderHashElement
 	eventx.IEventDispatcher
 	// 生产消息
 	// 抛出事件 EventMessageOnProducer
@@ -83,6 +85,11 @@ const (
 	RPCProducer
 	CustomizeProducer
 )
+
+type ProducerSetting struct {
+	Id   string
+	Mode ProducerMode
+}
 
 var (
 	// 函数映射表
