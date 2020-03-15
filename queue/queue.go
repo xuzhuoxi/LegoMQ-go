@@ -2,8 +2,8 @@ package queue
 
 import (
 	"errors"
-	"github.com/xuzhuoxi/LegoMQ-go"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 )
 
 var (
@@ -57,7 +57,7 @@ type IMessageContextQueueWriter interface {
 }
 
 type IMessageContextQueue interface {
-	mq.IIdSupport
+	collectionx.IOrderHashElement
 	// Cache最大容量
 	MaxSize() int
 	// Cache当前容量

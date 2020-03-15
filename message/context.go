@@ -1,10 +1,20 @@
 package message
 
-import "time"
+import (
+	"sync"
+	"time"
+)
+
+var index = 0
+var mu sync.Mutex
 
 func NewMessageContext(routingKey string, header interface{}, sender string, receiver string, body interface{}) IMessageContext {
 	rs := &messageContext{routingKey: routingKey, header: header, sender: sender, receiver: receiver, body: body}
 	rs.timestamp = time.Now().UnixNano()
+	mu.Lock()
+	rs.index = index
+	index += 1
+	mu.Unlock()
 	return rs
 }
 
@@ -17,7 +27,7 @@ type messageContext struct {
 	sender    string
 	receiver  string
 	timestamp int64
-	index     uint64
+	index     int
 
 	body interface{}
 }
@@ -30,7 +40,7 @@ func (c *messageContext) Timestamp() int64 {
 	return c.timestamp
 }
 
-func (c *messageContext) Index() uint64 {
+func (c *messageContext) Index() int {
 	return c.index
 }
 

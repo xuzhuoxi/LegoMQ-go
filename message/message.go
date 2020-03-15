@@ -15,7 +15,7 @@ type IMessageContext interface {
 	// 生成时间戳
 	Timestamp() int64
 	// 生成序号
-	Index() uint64
+	Index() int
 
 	// 消息体
 	Body() interface{}

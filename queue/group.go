@@ -8,14 +8,10 @@ import (
 )
 
 var (
-	ErrQueueIdUnknown = errors.New("QueueId Unknown. ")
-	ErrQueueIdExists  = errors.New("QueueId Exists. ")
-	ErrQueueNil       = errors.New("Queue is nil. ")
+	ErrQueueIdUnknown = errors.New("MessageQueueGroup: QueueId Unknown. ")
+	ErrQueueIdExists  = errors.New("MessageQueueGroup: QueueId Exists. ")
+	ErrQueueNil       = errors.New("MessageQueueGroup: Queue is nil. ")
 )
-
-type QueueGroupSetting struct {
-	Queues []QueueSetting
-}
 
 // 消息队列组
 // 配置接口
@@ -26,46 +22,46 @@ type IMessageQueueGroupConfig interface {
 	QueueIds() []string
 	// 创建一个队列，id使用默认规则创建
 	// err:
-	// 		QueueMode未注册时返回 ErrQueueModeUnregister
+	// 		ErrQueueModeUnregister:	QueueMode未注册
 	CreateQueue(mode QueueMode, size int) (queue IMessageContextQueue, err error)
 	// 创建一个队列，id使用默认规则创建
 	// err:
-	// 		QueueMode未注册时返回 ErrQueueModeUnregister
+	// 		ErrQueueModeUnregister:	QueueMode未注册
 	CreateQueues(modes []QueueMode, size int) (queues []IMessageContextQueue, err error)
 	// 加入一个队列
 	// err:
-	// 		queue为nil时返回ErrQueueNil
-	//		QueueId重复时返回 ErrQueueIdExists
+	// 		ErrQueueNil:		queue为nil时
+	//		ErrQueueIdExists:	QueueId重复时
 	AddQueue(queue IMessageContextQueue) error
 	// 加入多个队列
 	// count: 成功加入的队列数量
 	// err1:
-	// 		queues中单元为nil时返回ErrQueueNil
+	// 		ErrQueueNil:		queues中单元为nil时
 	// err2:
-	//		QueueId重复时返回 ErrQueueIdExists
+	//		ErrQueueIdExists:	QueueId重复时
 	AddQueues(queues []IMessageContextQueue) (count int, failArr []IMessageContextQueue, err1 error, err2 error)
 	// 移除一个队列
 	// queue: 返回被移除的队列
 	// err:
-	//		QueueId不存在时返回 ErrQueueIdUnknown
+	//		ErrQueueIdUnknown:	QueueId不存在时
 	RemoveQueue(queueId string) (queue IMessageContextQueue, err error)
 	// 移除多个队列
 	// queues: 返回被移除的队列数组
 	// err:
-	//		QueueId不存在时返回 ErrQueueIdUnknown
+	//		ErrQueueIdUnknown:	QueueId不存在时
 	RemoveQueues(queueIdArr []string) (queues []IMessageContextQueue, err error)
 	// 替换一个队列
 	// 根据QueueId进行替换，如果找不到相同QueueId，直接加入
 	// err:
-	// 		queue为nil时返回ErrQueueNil
+	// 		ErrQueueNil:	queue为nil时
 	UpdateQueue(queue IMessageContextQueue) (err error)
 	// 替换一个队列
 	// 根据QueueId进行替换，如果找不到相同QueueId，直接加入
 	// err:
-	// 		queue为nil时返回ErrQueueNil
+	// 		ErrQueueNil:	queue为nil时
 	UpdateQueues(queues []IMessageContextQueue) (err error)
 	// 使用配置初始化队列组，覆盖旧配置
-	InitQueueGroup(settings QueueGroupSetting) error
+	InitQueueGroup(settings []QueueSetting) (queues []IMessageContextQueue, err error)
 }
 
 // 消息队列组
@@ -298,22 +294,21 @@ func (g *queueGroup) UpdateQueues(queues []IMessageContextQueue) (err error) {
 	return
 }
 
-func (g *queueGroup) InitQueueGroup(settings QueueGroupSetting) error {
+func (g *queueGroup) InitQueueGroup(settings []QueueSetting) (queues []IMessageContextQueue, err error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	var queues []IMessageContextQueue
 	var queueMap = make(map[string]IMessageContextQueue)
-	for index, _ := range settings.Queues {
-		queue, err := NewContextQueue(settings.Queues[index])
+	for index, _ := range settings {
+		queue, err := NewContextQueue(settings[index])
 		if nil != err {
-			return nil
+			return nil, err
 		}
 		queues = append(queues, queue)
 		queueMap[queue.Id()] = queue
 	}
 	g.queues = queues
 	g.queueMap = queueMap
-	return nil
+	return
 }
 
 func (g *queueGroup) addQueue(queue IMessageContextQueue) {
@@ -324,7 +319,7 @@ func (g *queueGroup) addQueue(queue IMessageContextQueue) {
 func (g *queueGroup) removeQueueAt(index int) (queue IMessageContextQueue) {
 	if index >= 0 && index < len(g.queues) {
 		queue = g.queues[index]
-		g.queues = append(g.queues[:index], g.queues[index:]...)
+		g.queues = append(g.queues[:index], g.queues[index+1:]...)
 	}
 	return
 }
