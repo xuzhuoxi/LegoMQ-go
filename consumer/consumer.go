@@ -2,8 +2,8 @@ package consumer
 
 import (
 	"errors"
-	"github.com/xuzhuoxi/LegoMQ-go"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"github.com/xuzhuoxi/infra-go/logx"
 )
 
@@ -14,7 +14,7 @@ var (
 )
 
 type IMessageConsumer interface {
-	mq.IIdSupport
+	collectionx.IOrderHashElement
 	// 消费一条消息
 	// err:
 	//		msg为nil时ErrConsumerMessageNil
@@ -43,12 +43,17 @@ const (
 	CustomizeConsumer
 )
 
+type ConsumerSetting struct {
+	Id   string
+	Mode ConsumerMode
+}
+
 var (
 	// 函数映射表
 	consumerMap = make(map[ConsumerMode]func() IMessageConsumer)
 )
 
-func (cm ConsumerMode) NewMessageConsumer() (p IMessageConsumer, err error) {
+func (cm ConsumerMode) NewMessageConsumer() (c IMessageConsumer, err error) {
 	if v, ok := consumerMap[cm]; ok {
 		return v(), nil
 	} else {
