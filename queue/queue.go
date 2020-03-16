@@ -94,6 +94,7 @@ var (
 	queueMap = make(map[QueueMode]func(maxSize int) (c IMessageContextQueue, err error))
 )
 
+// 创建队列实例
 func (qm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err error) {
 	if v, ok := queueMap[qm]; ok {
 		return v(maxSize)
@@ -102,6 +103,7 @@ func (qm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err er
 	}
 }
 
+// 根据创建队列实例
 func NewContextQueue(setting QueueSetting) (c IMessageContextQueue, err error) {
 	q, err := setting.Mode.NewContextQueue(setting.Size)
 	if nil != err {

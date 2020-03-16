@@ -88,6 +88,7 @@ type IMessageConsumerGroup interface {
 
 func NewMessageConsumerGroup() (config IMessageConsumerGroupConfig, group IMessageConsumerGroup) {
 	rs := &consumerGroup{}
+	rs.group = *collectionx.NewOrderHashGroup()
 	return rs, rs
 }
 
@@ -226,11 +227,7 @@ func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) (consumers
 		return nil, nil
 	}
 	for idx, _ := range settings {
-		consumer, err := settings[idx].Mode.NewMessageConsumer()
-		if nil != err {
-			return nil, err
-		}
-		consumer.SetId(settings[idx].Id)
+		consumer, err := NewMessageConsumer(settings[idx])
 		err = group.Add(consumer)
 		if nil != err {
 			return nil, err

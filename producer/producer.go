@@ -96,12 +96,23 @@ var (
 	producerMap = make(map[ProducerMode]func() IMessageProducer)
 )
 
+// 创建生产者实例
 func (cm ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
 	if v, ok := producerMap[cm]; ok {
 		return v(), nil
 	} else {
 		return nil, ErrProducerModeUnregister
 	}
+}
+
+// 根据创建生产者实例
+func NewMessageProducer(setting ProducerSetting) (c IMessageProducer, err error) {
+	q, err := setting.Mode.NewMessageProducer()
+	if nil != err {
+		return nil, err
+	}
+	q.SetId(setting.Id)
+	return q, nil
 }
 
 // 注册

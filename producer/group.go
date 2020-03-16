@@ -89,6 +89,7 @@ type IMessageProducerGroup interface {
 
 func NewMessageProducerGroup() (config IMessageProducerGroupConfig, group IMessageProducerGroup) {
 	rs := &producerGroup{}
+	rs.group = *collectionx.NewOrderHashGroup()
 	return rs, rs
 }
 
@@ -227,11 +228,7 @@ func (g *producerGroup) InitProducerGroup(settings []ProducerSetting) (producers
 		return nil, nil
 	}
 	for idx, _ := range settings {
-		producer, err := settings[idx].Mode.NewMessageProducer()
-		if nil != err {
-			return nil, err
-		}
-		producer.SetId(settings[idx].Id)
+		producer, err := NewMessageProducer(settings[idx])
 		err = group.Add(producer)
 		if nil != err {
 			return nil, err

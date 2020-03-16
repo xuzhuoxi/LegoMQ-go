@@ -53,12 +53,23 @@ var (
 	consumerMap = make(map[ConsumerMode]func() IMessageConsumer)
 )
 
+// 创建消费者实例
 func (cm ConsumerMode) NewMessageConsumer() (c IMessageConsumer, err error) {
 	if v, ok := consumerMap[cm]; ok {
 		return v(), nil
 	} else {
 		return nil, ErrConsumerModeUnregister
 	}
+}
+
+// 根据创建消费者实例
+func NewMessageConsumer(setting ConsumerSetting) (c IMessageConsumer, err error) {
+	q, err := setting.Mode.NewMessageConsumer()
+	if nil != err {
+		return nil, err
+	}
+	q.SetId(setting.Id)
+	return q, nil
 }
 
 // 注册
