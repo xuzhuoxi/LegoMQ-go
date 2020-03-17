@@ -1,9 +1,25 @@
 package routing
 
+import (
+	"errors"
+)
+
+var (
+	ErrRougingRegister = errors.New("RoutingMode Unregister! ")
+
+	ErrRoutingUnSupport    = errors.New("RoutingStrategy route failed! ")
+	ErrRoutingTargetNil    = errors.New("RoutingStrategy TargetIds is empty! ")
+	ErrRoutingTargetsEmpty = errors.New("RoutingStrategy TargetIds is empty! ")
+	ErrRoutingFail         = errors.New("RoutingStrategy route failed! ")
+)
+
 // 消息路由策略
 type RoutingMode uint8
 
-func (gm RoutingMode) NewGroupStrategy() (s IRoutingStrategy, err error) {
+// 函数映射表
+var groupStrategyMap = make(map[RoutingMode]func() IRoutingStrategy)
+
+func (gm RoutingMode) NewRoutingStrategy() (s IRoutingStrategy, err error) {
 	if v, ok := groupStrategyMap[gm]; ok {
 		return v(), nil
 	} else {
@@ -13,41 +29,64 @@ func (gm RoutingMode) NewGroupStrategy() (s IRoutingStrategy, err error) {
 
 const (
 	// 无路由
-	NoneRouting RoutingMode = iota
+	NeverRouting RoutingMode = iota
+	// 全部路由
+	AlwaysRouting
 	// 顺序路由
 	SequenceRouting
 	// 随机路由
 	RandomRouting
 	// Hash路由
-	HashRouting
+	HashAvgRouting
+	// 单词匹配路由
+	WordsRouting
+	// 单词匹配路由
+	CaseWordsRouting
+	// 正则路由
+	RegexRouting
 	// 自定义路由
 	CustomizeRouting
 )
 
-var (
-	// 函数映射表
-	groupStrategyMap = make(map[RoutingMode]func() IRoutingStrategy)
-)
+type IRoutingElement interface {
+	Id() string
+	Formats() []string
+}
+
+type IRoutingStrategyConfig interface {
+	// 路由目标数量
+	TargetSize() int
+	// 追加路由目标
+	AppendRoutingTarget(target IRoutingElement) error
+	// 追加路由目标
+	AppendRoutingTargets(targets []IRoutingElement) error
+	// 设置路由目标
+	SetRoutingTargets(targets []IRoutingElement) error
+}
 
 // 路由策略接口
 type IRoutingStrategy interface {
 	// 策略类型
 	Mode() RoutingMode
-	// 路由目标数量
-	LenTarget() int
-
-	// 设置路由目标
-	SetTargets(targetIds []string)
-	// 追加路由目标
-	AppendTarget(targetId string)
 
 	// 路由函数
-	RouteTo(routingKey string, targetIds []string) (count int, err error)
-	// 路由函数
-	Route(routingKey string) (targetIds []string, err error)
+	Route(routingKey string) (targets []IRoutingElement, err error)
+	// 匹配检查
+	match(routingKey string, routingFormat string) bool
 }
 
 // 路由策略注册入口
 func RegisterRoutingStrategy(s RoutingMode, f func() IRoutingStrategy) {
 	groupStrategyMap[s] = f
+}
+
+func init() {
+	RegisterRoutingStrategy(NeverRouting, NewNeverRoutingStrategy)
+	RegisterRoutingStrategy(AlwaysRouting, NewAlwaysRoutingStrategy)
+	RegisterRoutingStrategy(SequenceRouting, NewSequenceRoutingStrategy)
+	RegisterRoutingStrategy(RandomRouting, NewRandomRoutingStrategy)
+	RegisterRoutingStrategy(HashAvgRouting, NewHashAvgRoutingStrategy)
+	RegisterRoutingStrategy(WordsRouting, NewWordsRoutingStrategy)
+	RegisterRoutingStrategy(CaseWordsRouting, NewCaseWordsRoutingStrategy)
+	RegisterRoutingStrategy(RegexRouting, NewRegexRoutingStrategy)
 }
