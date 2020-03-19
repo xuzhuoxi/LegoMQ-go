@@ -3,6 +3,7 @@ package producer
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -65,6 +66,9 @@ type IMessageProducerGroupConfig interface {
 }
 
 type IMessageProducerGroup interface {
+	eventx.IEventDispatcher
+	// 配置入口
+	Config() IMessageProducerGroupConfig
 	// 取生成者
 	// err:
 	// 		ErrProducerIdUnknown:	ProducerId不存在
@@ -96,9 +100,14 @@ func NewMessageProducerGroup() (config IMessageProducerGroupConfig, group IMessa
 //---------------------
 
 type producerGroup struct {
+	eventx.EventDispatcher
 	group  collectionx.OrderHashGroup
 	autoId int
 	mu     sync.RWMutex
+}
+
+func (g *producerGroup) Config() IMessageProducerGroupConfig {
+	return g
 }
 
 func (g *producerGroup) ProducerSize() int {
@@ -123,6 +132,9 @@ func (g *producerGroup) CreateProducer(mode ProducerMode) (producer IMessageProd
 	producer.SetId(strconv.Itoa(g.autoId))
 	g.autoId += 1
 	err = g.group.Add(producer)
+	if nil == err {
+		g.addListeners(producer)
+	}
 	return
 }
 
@@ -130,6 +142,8 @@ func (g *producerGroup) CreateProducers(modes []ProducerMode) (producers []IMess
 	if len(modes) == 0 {
 		return
 	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	for _, mode := range modes {
 		producer, e := mode.NewMessageProducer()
 		if nil != e {
@@ -143,6 +157,7 @@ func (g *producerGroup) CreateProducers(modes []ProducerMode) (producers []IMess
 			err = append(err, e)
 			continue
 		}
+		g.addListeners(producer)
 		producers = append(producers, producer)
 	}
 	return
@@ -151,7 +166,12 @@ func (g *producerGroup) CreateProducers(modes []ProducerMode) (producers []IMess
 func (g *producerGroup) AddProducer(producer IMessageProducer) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	return g.group.Add(producer)
+	err := g.group.Add(producer)
+	if nil != err {
+		return err
+	}
+	g.addListeners(producer)
+	return nil
 }
 
 func (g *producerGroup) AddProducers(producers []IMessageProducer) (count int, failArr []IMessageProducer, err []error) {
@@ -166,6 +186,7 @@ func (g *producerGroup) AddProducers(producers []IMessageProducer) (count int, f
 			err = append(err, e)
 			failArr = append(failArr, producers[idx])
 		} else {
+			g.addListeners(producers[idx])
 			count += 1
 		}
 	}
@@ -179,7 +200,9 @@ func (g *producerGroup) RemoveProducer(producerId string) (producer IMessageProd
 	if nil != e {
 		return nil, e
 	}
-	return ele.(IMessageProducer), nil
+	producer = ele.(IMessageProducer)
+	g.removeListeners(producer)
+	return
 }
 
 func (g *producerGroup) RemoveProducers(producerIdArr []string) (producers []IMessageProducer, err []error) {
@@ -193,7 +216,9 @@ func (g *producerGroup) RemoveProducers(producerIdArr []string) (producers []IMe
 		if nil != e {
 			err = append(err, e)
 		} else {
-			producers = append(producers, ele.(IMessageProducer))
+			producer := ele.(IMessageProducer)
+			g.removeListeners(producer)
+			producers = append(producers, producer)
 		}
 	}
 	return
@@ -202,7 +227,13 @@ func (g *producerGroup) RemoveProducers(producerIdArr []string) (producers []IMe
 func (g *producerGroup) UpdateProducer(producer IMessageProducer) (err error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	return g.group.Update(producer)
+	replaced, e := g.group.Update(producer)
+	if e != nil {
+		return e
+	}
+	g.removeListeners(replaced.(IMessageProducer))
+	g.addListeners(producer)
+	return nil
 }
 
 func (g *producerGroup) UpdateProducers(producers []IMessageProducer) (err []error) {
@@ -212,9 +243,12 @@ func (g *producerGroup) UpdateProducers(producers []IMessageProducer) (err []err
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	for idx, _ := range producers {
-		e := g.group.Update(producers[idx])
+		r, e := g.group.Update(producers[idx])
 		if nil != e {
 			err = append(err, e)
+		} else {
+			g.removeListeners(r.(IMessageProducer))
+			g.addListeners(producers[idx])
 		}
 	}
 	return
@@ -229,27 +263,33 @@ func (g *producerGroup) InitProducerGroup(settings []ProducerSetting) (producers
 	}
 	for idx, _ := range settings {
 		producer, err := NewMessageProducer(settings[idx])
-		err = group.Add(producer)
+		err = g.group.Add(producer)
 		if nil != err {
 			return nil, err
 		}
+		g.addListeners(producer)
 		producers = append(producers, producer)
 	}
 	g.group = group
 	return producers, nil
 }
 
-func (g *producerGroup) NotifyMessageProduced(msg message.IMessageContext, producerId string) error {
-	if nil == msg {
-		return ErrProducerMessageNil
-	}
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	ele, ok := g.group.Get(producerId)
-	if !ok {
-		return ErrProducerIdUnknown
-	}
-	return ele.(IMessageProducer).NotifyMessageProduced(msg)
+func (g *producerGroup) addListeners(producer IMessageProducer) {
+	producer.AddEventListener(EventMessageOnProducer, g.onProduced)
+	producer.AddEventListener(EventMultiMessageOnProducer, g.onMultiProduced)
+}
+
+func (g *producerGroup) removeListeners(producer IMessageProducer) {
+	producer.RemoveEventListener(EventMultiMessageOnProducer, g.onMultiProduced)
+	producer.RemoveEventListener(EventMessageOnProducer, g.onProduced)
+}
+
+func (g *producerGroup) onProduced(evt *eventx.EventData) {
+	g.DispatchEvent(EventMessageOnProducer, g, evt.Data)
+}
+
+func (g *producerGroup) onMultiProduced(evt *eventx.EventData) {
+	g.DispatchEvent(EventMultiMessageOnProducer, g, evt.Data)
 }
 
 //----------------------
@@ -272,6 +312,19 @@ func (g *producerGroup) GetProducerAt(index int) (IMessageProducer, error) {
 	} else {
 		return nil, ErrProducerIndexRange
 	}
+}
+
+func (g *producerGroup) NotifyMessageProduced(msg message.IMessageContext, producerId string) error {
+	if nil == msg {
+		return ErrProducerMessageNil
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	ele, ok := g.group.Get(producerId)
+	if !ok {
+		return ErrProducerIdUnknown
+	}
+	return ele.(IMessageProducer).NotifyMessageProduced(msg)
 }
 
 func (g *producerGroup) NotifyMessagesProduced(msg []message.IMessageContext, producerId string) error {

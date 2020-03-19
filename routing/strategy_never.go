@@ -19,6 +19,10 @@ func (s *neverStrategy) Mode() RoutingMode {
 	return NeverRouting
 }
 
+func (s *neverStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
 func (s *neverStrategy) TargetSize() int {
 	return 0
 }

@@ -12,7 +12,11 @@ func (s *hashStrategy) Mode() RoutingMode {
 	return HashAvgRouting
 }
 
-func (s *hashStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *hashStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *hashStrategy) Route(routingKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -24,7 +28,7 @@ func (s *hashStrategy) Route(routingKey string) (targets []IRoutingElement, err 
 		rs += int(v)
 	}
 	index := rs % len(s.Targets)
-	targets = append(nil, s.Targets[index])
+	targets = append(nil, s.Targets[index].Id())
 	return
 }
 

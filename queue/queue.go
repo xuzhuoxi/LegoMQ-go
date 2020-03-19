@@ -89,14 +89,12 @@ type QueueSetting struct {
 	Size int
 }
 
-var (
-	// 函数映射表
-	queueMap = make(map[QueueMode]func(maxSize int) (c IMessageContextQueue, err error))
-)
+// 函数映射表
+var newQueueFuncArr = make([]func(maxSize int) (c IMessageContextQueue, err error), 16, 16)
 
 // 创建队列实例
-func (qm QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err error) {
-	if v, ok := queueMap[qm]; ok {
+func (m QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err error) {
+	if v := newQueueFuncArr[m]; nil != v {
 		return v(maxSize)
 	} else {
 		return nil, ErrQueueModeUnregister
@@ -115,7 +113,7 @@ func NewContextQueue(setting QueueSetting) (c IMessageContextQueue, err error) {
 
 // 注册
 func RegisterQueueMode(m QueueMode, f func(maxSize int) (c IMessageContextQueue, err error)) {
-	queueMap[m] = f
+	newQueueFuncArr[m] = f
 }
 
 func init() {

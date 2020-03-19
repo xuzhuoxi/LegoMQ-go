@@ -127,6 +127,8 @@ type IMessageQueueGroup interface {
 	// err:
 	// 		ErrQueueIndexRange:	index越界
 	GetQueueAt(index int) (IMessageContextQueue, error)
+	// 配置入口
+	Config() IMessageQueueGroupConfig
 }
 
 func NewMessageQueueGroup() IMessageQueueGroup {
@@ -141,6 +143,10 @@ type queueGroup struct {
 	group  collectionx.OrderHashGroup
 	autoId int
 	mu     sync.RWMutex
+}
+
+func (g *queueGroup) Config() IMessageQueueGroupConfig {
+	return g
 }
 
 func (g *queueGroup) QueueSize() int {

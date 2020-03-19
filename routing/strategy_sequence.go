@@ -9,7 +9,11 @@ func (s *sequenceStrategy) Mode() RoutingMode {
 	return SequenceRouting
 }
 
-func (s *sequenceStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *sequenceStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *sequenceStrategy) Route(routingKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -18,7 +22,7 @@ func (s *sequenceStrategy) Route(routingKey string) (targets []IRoutingElement, 
 	if s.current >= len(s.Targets) {
 		s.current = 0
 	}
-	targets = append(nil, s.Targets[s.current])
+	targets = append(nil, s.Targets[s.current].Id())
 	s.current += 1
 	return
 }

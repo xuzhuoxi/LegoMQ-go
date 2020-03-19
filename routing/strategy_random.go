@@ -12,14 +12,18 @@ func (s *randomStrategy) Mode() RoutingMode {
 	return RandomRouting
 }
 
-func (s *randomStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *randomStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *randomStrategy) Route(routingKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
 		return nil, ErrRoutingFail
 	}
 	index := rand.Intn(len(s.Targets))
-	targets = append(nil, s.Targets[index])
+	targets = append(nil, s.Targets[index].Id())
 	return
 }
 

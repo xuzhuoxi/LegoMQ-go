@@ -8,14 +8,20 @@ func (s *alwaysStrategy) Mode() RoutingMode {
 	return NeverRouting
 }
 
-func (s *alwaysStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *alwaysStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *alwaysStrategy) Route(routingKey string) (targetIds []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
 		return nil, ErrRoutingFail
 	}
-	targets = make([]IRoutingElement, len(s.Targets), len(s.Targets))
-	copy(targets, s.Targets)
+	targetIds = make([]string, len(s.Targets), len(s.Targets))
+	for idx, _ := range s.Targets {
+		targetIds[idx] = s.Targets[idx].Id()
+	}
 	return
 }
 

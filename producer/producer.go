@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	EventMessageOnProducer      string = "producer.EventMessageOnProducer"
-	EventMultiMessageOnProducer string = "producer.EventMultiMessageOnProducer"
+	EventMessageOnProducer      = "producer.EventMessageOnProducer"
+	EventMultiMessageOnProducer = "producer.EventMultiMessageOnProducer"
 )
 
 var (
@@ -91,14 +91,12 @@ type ProducerSetting struct {
 	Mode ProducerMode
 }
 
-var (
-	// 函数映射表
-	producerMap = make(map[ProducerMode]func() IMessageProducer)
-)
+// 函数映射表
+var newProducerFuncArr = make([]func() IMessageProducer, 16, 16)
 
 // 创建生产者实例
-func (cm ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
-	if v, ok := producerMap[cm]; ok {
+func (m ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
+	if v := newProducerFuncArr[m]; nil != v {
 		return v(), nil
 	} else {
 		return nil, ErrProducerModeUnregister
@@ -117,7 +115,7 @@ func NewMessageProducer(setting ProducerSetting) (c IMessageProducer, err error)
 
 // 注册
 func RegisterProducerMode(m ProducerMode, f func() IMessageProducer) {
-	producerMap[m] = f
+	newProducerFuncArr[m] = f
 }
 
 func init() {

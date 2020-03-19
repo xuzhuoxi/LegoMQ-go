@@ -17,10 +17,10 @@ var (
 type RoutingMode uint8
 
 // 函数映射表
-var groupStrategyMap = make(map[RoutingMode]func() IRoutingStrategy)
+var newRoutingFuncArr = make([]func() IRoutingStrategy, 32, 32)
 
-func (gm RoutingMode) NewRoutingStrategy() (s IRoutingStrategy, err error) {
-	if v, ok := groupStrategyMap[gm]; ok {
+func (m RoutingMode) NewRoutingStrategy() (s IRoutingStrategy, err error) {
+	if v := newRoutingFuncArr[m]; nil != v {
 		return v(), nil
 	} else {
 		return nil, ErrRougingRegister
@@ -68,16 +68,18 @@ type IRoutingStrategyConfig interface {
 type IRoutingStrategy interface {
 	// 策略类型
 	Mode() RoutingMode
+	// 配置入口
+	Config() IRoutingStrategyConfig
 
 	// 路由函数
-	Route(routingKey string) (targets []IRoutingElement, err error)
+	Route(routingKey string) (targetIds []string, err error)
 	// 匹配检查
 	match(routingKey string, routingFormat string) bool
 }
 
 // 路由策略注册入口
 func RegisterRoutingStrategy(s RoutingMode, f func() IRoutingStrategy) {
-	groupStrategyMap[s] = f
+	newRoutingFuncArr[s] = f
 }
 
 func init() {

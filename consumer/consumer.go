@@ -48,14 +48,12 @@ type ConsumerSetting struct {
 	Mode ConsumerMode
 }
 
-var (
-	// 函数映射表
-	consumerMap = make(map[ConsumerMode]func() IMessageConsumer)
-)
+// 函数映射表
+var newConsumerFuncArr = make([]func() IMessageConsumer, 16, 16)
 
 // 创建消费者实例
-func (cm ConsumerMode) NewMessageConsumer() (c IMessageConsumer, err error) {
-	if v, ok := consumerMap[cm]; ok {
+func (m ConsumerMode) NewMessageConsumer() (c IMessageConsumer, err error) {
+	if v := newConsumerFuncArr[m]; nil != v {
 		return v(), nil
 	} else {
 		return nil, ErrConsumerModeUnregister
@@ -74,7 +72,7 @@ func NewMessageConsumer(setting ConsumerSetting) (c IMessageConsumer, err error)
 
 // 注册
 func RegisterConsumerMode(m ConsumerMode, f func() IMessageConsumer) {
-	consumerMap[m] = f
+	newConsumerFuncArr[m] = f
 }
 
 func init() {

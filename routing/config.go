@@ -1,13 +1,22 @@
 package routing
 
-import "sync"
+import (
+	"sync"
+)
+
+type RoutingSetting struct {
+	Id   string
+	Mode RoutingMode
+}
+
+//----------------------
 
 type StrategyConfig struct {
 	Targets []IRoutingElement
 	Mu      sync.RWMutex
 }
 
-func (s *alwaysStrategy) TargetSize() int {
+func (s *StrategyConfig) TargetSize() int {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	return len(s.Targets)

@@ -10,7 +10,11 @@ func (s *wordsStrategy) Mode() RoutingMode {
 	return WordsRouting
 }
 
-func (s *wordsStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *wordsStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *wordsStrategy) Route(routingKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -24,7 +28,7 @@ func (s *wordsStrategy) Route(routingKey string) (targets []IRoutingElement, err
 		}
 		for _, routingFormat := range formats {
 			if s.match(lowerRoutingKey, routingFormat) {
-				targets = append(targets, s.Targets[idx])
+				targets = append(targets, s.Targets[idx].Id())
 				break
 			}
 		}

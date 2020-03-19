@@ -10,7 +10,11 @@ func (s *regexStrategy) Mode() RoutingMode {
 	return RegexRouting
 }
 
-func (s *regexStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *regexStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *regexStrategy) Route(routingKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -23,7 +27,7 @@ func (s *regexStrategy) Route(routingKey string) (targets []IRoutingElement, err
 		}
 		for _, routingFormat := range formats {
 			if s.match(routingKey, routingFormat) {
-				targets = append(targets, s.Targets[idx])
+				targets = append(targets, s.Targets[idx].Id())
 			}
 		}
 	}

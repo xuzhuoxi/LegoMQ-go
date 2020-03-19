@@ -65,6 +65,8 @@ type IMessageConsumerGroupConfig interface {
 }
 
 type IMessageConsumerGroup interface {
+	// 配置入口
+	Config() IMessageConsumerGroupConfig
 	// 取生成者
 	// err:
 	// 		ErrConsumerIdUnknown:	ConsumerId不存在
@@ -98,6 +100,10 @@ type consumerGroup struct {
 	group  collectionx.OrderHashGroup
 	autoId int
 	mu     sync.RWMutex
+}
+
+func (g *consumerGroup) Config() IMessageConsumerGroupConfig {
+	return g
 }
 
 func (g *consumerGroup) ConsumerSize() int {
