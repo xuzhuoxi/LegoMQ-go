@@ -207,7 +207,8 @@ func (g *consumerGroup) RemoveConsumers(consumerIdArr []string) (consumers []IMe
 func (g *consumerGroup) UpdateConsumer(consumer IMessageConsumer) (err error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	return g.group.Update(consumer)
+	_, err = g.group.Update(consumer)
+	return
 }
 
 func (g *consumerGroup) UpdateConsumers(consumers []IMessageConsumer) (err []error) {
@@ -217,7 +218,7 @@ func (g *consumerGroup) UpdateConsumers(consumers []IMessageConsumer) (err []err
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	for idx, _ := range consumers {
-		e := g.group.Update(consumers[idx])
+		_, e := g.group.Update(consumers[idx])
 		if nil != e {
 			err = append(err, e)
 		}

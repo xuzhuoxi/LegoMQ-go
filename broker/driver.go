@@ -20,6 +20,7 @@ func NewTimeSliceDriver(duration time.Duration) ITimeSliceDriver {
 }
 
 type ITimeSliceDriver interface {
+	eventx.IEventDispatcher
 	DriverStart() error
 	DriverStop() error
 }

@@ -131,10 +131,10 @@ type IMessageQueueGroup interface {
 	Config() IMessageQueueGroupConfig
 }
 
-func NewMessageQueueGroup() IMessageQueueGroup {
+func NewMessageQueueGroup() (config IMessageQueueGroupConfig, group IMessageQueueGroup) {
 	rs := &queueGroup{}
 	rs.group = *collectionx.NewOrderHashGroup()
-	return rs
+	return rs, rs
 }
 
 //---------------------
@@ -253,7 +253,8 @@ func (g *queueGroup) RemoveQueues(queueIdArr []string) (queues []IMessageContext
 func (g *queueGroup) UpdateQueue(queue IMessageContextQueue) (err error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	return g.group.Update(queue)
+	_, err = g.group.Update(queue)
+	return
 }
 
 func (g *queueGroup) UpdateQueues(queues []IMessageContextQueue) (err []error) {
@@ -263,7 +264,7 @@ func (g *queueGroup) UpdateQueues(queues []IMessageContextQueue) (err []error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	for idx, _ := range queues {
-		e := g.group.Update(queues[idx])
+		_, e := g.group.Update(queues[idx])
 		if nil != e {
 			err = append(err, e)
 		}
