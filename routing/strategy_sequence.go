@@ -22,7 +22,7 @@ func (s *sequenceStrategy) Route(routingKey string) (targets []string, err error
 	if s.current >= len(s.Targets) {
 		s.current = 0
 	}
-	targets = append(nil, s.Targets[s.current].Id())
+	targets = append(targets, s.Targets[s.current].Id())
 	s.current += 1
 	return
 }

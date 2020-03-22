@@ -5,8 +5,9 @@ import (
 )
 
 type RoutingSetting struct {
-	Id   string
-	Mode RoutingMode
+	Id      string
+	Mode    RoutingMode
+	Formats []string
 }
 
 //----------------------

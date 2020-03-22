@@ -15,7 +15,8 @@ func newPrintConsumer() IMessageConsumer {
 }
 
 type printConsumer struct {
-	id string
+	id      string
+	formats []string
 }
 
 func (c *printConsumer) Id() string {
@@ -24,6 +25,14 @@ func (c *printConsumer) Id() string {
 
 func (c *printConsumer) SetId(Id string) {
 	c.id = Id
+}
+
+func (c *printConsumer) Formats() []string {
+	return c.formats
+}
+
+func (c *printConsumer) SetFormat(formats []string) {
+	c.formats = formats
 }
 
 func (c *printConsumer) ConsumeMessage(msg message.IMessageContext) error {

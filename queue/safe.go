@@ -29,6 +29,14 @@ func (c *safeCache) SetId(Id string) {
 	c.unsafe.SetId(Id)
 }
 
+func (c *safeCache) Formats() []string {
+	return c.unsafe.Formats()
+}
+
+func (c *safeCache) SetFormat(formats []string) {
+	c.unsafe.SetFormat(formats)
+}
+
 func (c *safeCache) MaxSize() int {
 	return c.unsafe.MaxSize()
 }

@@ -18,9 +18,10 @@ func newLogConsumer() IMessageConsumer {
 }
 
 type logConsumer struct {
-	id     string
-	logger logx.ILogger
-	level  logx.LogLevel
+	id      string
+	formats []string
+	logger  logx.ILogger
+	level   logx.LogLevel
 }
 
 func (c *logConsumer) Id() string {
@@ -29,6 +30,14 @@ func (c *logConsumer) Id() string {
 
 func (c *logConsumer) SetId(Id string) {
 	c.id = Id
+}
+
+func (c *logConsumer) Formats() []string {
+	return c.formats
+}
+
+func (c *logConsumer) SetFormat(formats []string) {
+	c.formats = formats
 }
 
 func (c *logConsumer) ConsumeMessage(msg message.IMessageContext) error {

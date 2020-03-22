@@ -2,6 +2,7 @@ package routing
 
 import (
 	"errors"
+	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 )
 
 var (
@@ -49,8 +50,9 @@ const (
 )
 
 type IRoutingElement interface {
-	Id() string
+	collectionx.IOrderHashElement
 	Formats() []string
+	SetFormat(formats []string)
 }
 
 type IRoutingStrategyConfig interface {

@@ -3,6 +3,7 @@ package consumer
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -62,6 +63,8 @@ type IMessageConsumerGroupConfig interface {
 	UpdateConsumers(consumers []IMessageConsumer) (err []error)
 	// 使用配置初始化消费者组，覆盖旧配置
 	InitConsumerGroup(settings []ConsumerSetting) (consumers []IMessageConsumer, err error)
+	// 路由元素
+	RoutingElements() []routing.IRoutingElement
 }
 
 type IMessageConsumerGroup interface {
@@ -80,12 +83,19 @@ type IMessageConsumerGroup interface {
 	// 		ErrConsumerMessageNil: msg=nil时
 	// 		ErrConsumerIdUnknown: ConsumerId不存在
 	ConsumeMessage(msg message.IMessageContext, consumerId string) error
+	// 被动接收一个消息并进行处理
+	// err:
+	// 		ErrConsumerMessageNil: msg=nil时
+	// 		ErrConsumerIdUnknown: ConsumerId不存在
+	ConsumeMessageMulti(msg message.IMessageContext, consumerIds []string) (err []error)
 	// 被动接收多个消息并进行处理
 	// err:
 	//		ErrConsumerMessagesEmpty: msg长度为0
 	// 		ErrConsumerIdUnknown: ConsumerId不存在
 	//		其它错误
 	ConsumeMessages(msg []message.IMessageContext, consumerId string) error
+	// 遍历元素
+	ForEachElement(f func(index int, ele IMessageConsumer) (stop bool))
 }
 
 func NewMessageConsumerGroup() (config IMessageConsumerGroupConfig, group IMessageConsumerGroup) {
@@ -245,30 +255,18 @@ func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) (consumers
 	return consumers, nil
 }
 
-func (g *consumerGroup) ConsumeMessage(msg message.IMessageContext, consumerId string) error {
-	if nil == msg {
-		return ErrConsumerMessageNil
-	}
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	ele, ok := g.group.Get(consumerId)
-	if !ok {
-		return ErrConsumerIdUnknown
-	}
-	return ele.(IMessageConsumer).ConsumeMessage(msg)
+func (g *consumerGroup) RoutingElements() []routing.IRoutingElement {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	rs := make([]routing.IRoutingElement, 0, g.ConsumerSize())
+	g.group.ForEachElement(func(_ int, ele collectionx.IOrderHashElement) (stop bool) {
+		rs = append(rs, ele.(routing.IRoutingElement))
+		return false
+	})
+	return rs
 }
 
 //----------------------
-
-func (g *consumerGroup) GetConsumer(producerId string) (IMessageConsumer, error) {
-	g.mu.RLock()
-	defer g.mu.RUnlock()
-	if ele, ok := g.group.Get(producerId); ok {
-		return ele.(IMessageConsumer), nil
-	} else {
-		return nil, ErrConsumerIdUnknown
-	}
-}
 
 func (g *consumerGroup) GetConsumerAt(index int) (IMessageConsumer, error) {
 	g.mu.RLock()
@@ -280,15 +278,66 @@ func (g *consumerGroup) GetConsumerAt(index int) (IMessageConsumer, error) {
 	}
 }
 
+func (g *consumerGroup) GetConsumer(producerId string) (IMessageConsumer, error) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	if ele, ok := g.group.Get(producerId); ok {
+		return ele.(IMessageConsumer), nil
+	} else {
+		return nil, ErrConsumerIdUnknown
+	}
+}
+
+func (g *consumerGroup) ConsumeMessage(msg message.IMessageContext, consumerId string) error {
+	if nil == msg {
+		return ErrConsumerMessageNil
+	}
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	ele, ok := g.group.Get(consumerId)
+	if !ok {
+		return ErrConsumerIdUnknown
+	}
+	return ele.(IMessageConsumer).ConsumeMessage(msg)
+}
+
+func (g *consumerGroup) ConsumeMessageMulti(msg message.IMessageContext, consumerIds []string) (err []error) {
+	if 0 == len(consumerIds) {
+		return nil
+	}
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	for idx, _ := range consumerIds {
+		ele, ok := g.group.Get(consumerIds[idx])
+		if !ok {
+			err = append(err, ErrConsumerIdUnknown)
+			continue
+		}
+		e := ele.(IMessageConsumer).ConsumeMessage(msg)
+		if nil != e {
+			err = append(err, e)
+		}
+	}
+	return
+}
+
 func (g *consumerGroup) ConsumeMessages(msg []message.IMessageContext, consumerId string) error {
 	if 0 == len(msg) {
 		return ErrConsumerMessagesEmpty
 	}
-	g.mu.Lock()
-	defer g.mu.Unlock()
+	g.mu.RLock()
+	defer g.mu.RUnlock()
 	ele, ok := g.group.Get(consumerId)
 	if !ok {
 		return ErrConsumerIdUnknown
 	}
 	return ele.(IMessageConsumer).ConsumeMessages(msg)
+}
+
+func (g *consumerGroup) ForEachElement(f func(index int, ele IMessageConsumer) (stop bool)) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	g.group.ForEachElement(func(idx int, ele collectionx.IOrderHashElement) (stop bool) {
+		return f(idx, ele.(IMessageConsumer))
+	})
 }

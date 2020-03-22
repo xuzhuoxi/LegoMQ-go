@@ -23,7 +23,7 @@ func (s *randomStrategy) Route(routingKey string) (targets []string, err error) 
 		return nil, ErrRoutingFail
 	}
 	index := rand.Intn(len(s.Targets))
-	targets = append(nil, s.Targets[index].Id())
+	targets = append(targets, s.Targets[index].Id())
 	return
 }
 

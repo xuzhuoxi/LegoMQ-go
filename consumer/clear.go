@@ -25,6 +25,14 @@ func (c *clearConsumer) SetId(Id string) {
 	c.id = Id
 }
 
+func (c *clearConsumer) Formats() []string {
+	return nil
+}
+
+func (c *clearConsumer) SetFormat(formats []string) {
+	return
+}
+
 func (c *clearConsumer) ConsumeMessage(msg message.IMessageContext) error {
 	if nil == msg {
 		return ErrConsumerMessageNil

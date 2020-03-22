@@ -34,7 +34,7 @@ type IBridgeQueue2Consumer interface {
 	SetEntity(in queue.IMessageQueueGroup, out consumer.IMessageConsumerGroup) error
 	SetRoutingMode(mode routing.RoutingMode) error
 	SetRoutingStrategy(strategy routing.IRoutingStrategy) error
-	Link(duration time.Duration) error
+	Link(duration time.Duration, maxMessage int) error
 	Unlink() error
 }
 
@@ -105,6 +105,7 @@ func (b *p2qBridge) Link() error {
 	if b.started {
 		return ErrBridgeStarted
 	}
+	b.routing.Config().SetRoutingTargets(b.qGroup.Config().RoutingElements())
 	b.pGroup.AddEventListener(producer.EventMessageOnProducer, b.onProduced)
 	b.pGroup.AddEventListener(producer.EventMultiMessageOnProducer, b.onMultiProduced)
 	b.started = true
@@ -153,12 +154,13 @@ func (b *p2qBridge) onMultiProduced(evt *eventx.EventData) {
 //---------------
 
 type q2cBridge struct {
-	qGroup  queue.IMessageQueueGroup
-	cGroup  consumer.IMessageConsumerGroup
-	driver  ITimeSliceDriver
-	routing routing.IRoutingStrategy
-	mu      sync.RWMutex
-	started bool
+	qGroup   queue.IMessageQueueGroup
+	cGroup   consumer.IMessageConsumerGroup
+	driver   ITimeSliceDriver
+	routing  routing.IRoutingStrategy
+	mu       sync.RWMutex
+	started  bool
+	msgCache [][]message.IMessageContext
 }
 
 func (b *q2cBridge) SetEntity(in queue.IMessageQueueGroup, out consumer.IMessageConsumerGroup) error {
@@ -174,6 +176,7 @@ func (b *q2cBridge) SetEntity(in queue.IMessageQueueGroup, out consumer.IMessage
 		return ErrBridgeConsumerNil
 	}
 	b.qGroup, b.cGroup = in, out
+	b.msgCache = make([][]message.IMessageContext, b.qGroup.Config().QueueSize(), b.qGroup.Config().QueueSize())
 	return nil
 }
 
@@ -204,16 +207,21 @@ func (b *q2cBridge) SetRoutingStrategy(strategy routing.IRoutingStrategy) error 
 	return nil
 }
 
-func (b *q2cBridge) Link(duration time.Duration) error {
+func (b *q2cBridge) Link(duration time.Duration, maxMessage int) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
 		return ErrBridgeStarted
 	}
+	b.routing.Config().SetRoutingTargets(b.cGroup.Config().RoutingElements())
 	b.driver = NewTimeSliceDriver(duration)
+	b.driver.AddEventListener(EventOnTime, b.onTime)
 	err := b.driver.DriverStart()
 	if nil != err {
 		return err
+	}
+	for idx := b.qGroup.Config().QueueSize() - 1; idx >= 0; idx -= 1 {
+		b.msgCache[idx] = make([]message.IMessageContext, maxMessage, maxMessage)
 	}
 	b.started = true
 	return nil
@@ -229,37 +237,27 @@ func (b *q2cBridge) Unlink() error {
 	if nil != err {
 		return err
 	}
-	b.driver.AddEventListener(EventOnTime, b.onTime)
+	b.driver.RemoveEventListener(EventOnTime, b.onTime)
 	b.started = false
 	return nil
 }
 
 func (b *q2cBridge) onTime(evt *eventx.EventData) {
-	///-----
-}
-
-func (b *q2cBridge) onProduced(evt *eventx.EventData) {
-	msg := evt.Data.(message.IMessageContext)
-	if nil == msg {
-		return
-	}
-	tIds, err := b.routing.Route(msg.RoutingKey())
-	if nil != err {
-		return
-	}
-	b.qGroup.WriteMessageToMulti(msg, tIds)
-}
-
-func (b *q2cBridge) onMultiProduced(evt *eventx.EventData) {
-	msgArr := evt.Data.([]message.IMessageContext)
-	if 0 == len(msgArr) {
-		return
-	}
-	for idx, _ := range msgArr {
-		tIds, err := b.routing.Route(msgArr[idx].RoutingKey())
-		if nil != err {
-			return
+	b.qGroup.ForEachElement(func(index int, ele queue.IMessageContextQueue) (stop bool) {
+		count, _ := ele.ReadContextsTo(b.msgCache[index])
+		if count > 0 {
+			b.handleMessages(b.msgCache[index][:count])
 		}
-		b.qGroup.WriteMessageToMulti(msgArr[idx], tIds)
+		return false
+	})
+}
+
+func (b *q2cBridge) handleMessages(msgs []message.IMessageContext) {
+	for index, _ := range msgs {
+		ids, err := b.routing.Route(msgs[index].RoutingKey())
+		if nil != err {
+			continue
+		}
+		b.cGroup.ConsumeMessageMulti(msgs[index], ids)
 	}
 }

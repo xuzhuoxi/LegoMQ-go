@@ -3,7 +3,7 @@ package consumer
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/infra-go/lang/collectionx"
+	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/logx"
 )
 
@@ -14,7 +14,7 @@ var (
 )
 
 type IMessageConsumer interface {
-	collectionx.IOrderHashElement
+	routing.IRoutingElement
 	// 消费一条消息
 	// err:
 	//		msg为nil时ErrConsumerMessageNil
@@ -44,8 +44,9 @@ const (
 )
 
 type ConsumerSetting struct {
-	Id   string
-	Mode ConsumerMode
+	Id      string
+	Mode    ConsumerMode
+	Formats []string
 }
 
 // 函数映射表
@@ -67,6 +68,7 @@ func NewMessageConsumer(setting ConsumerSetting) (c IMessageConsumer, err error)
 		return nil, err
 	}
 	q.SetId(setting.Id)
+	q.SetFormat(setting.Formats)
 	return q, nil
 }
 

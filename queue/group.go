@@ -3,6 +3,7 @@ package queue
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -64,6 +65,8 @@ type IMessageQueueGroupConfig interface {
 	UpdateQueues(queues []IMessageContextQueue) (err []error)
 	// 使用配置初始化队列组，覆盖旧配置
 	InitQueueGroup(settings []QueueSetting) (queues []IMessageContextQueue, err error)
+	// 路由信息
+	RoutingElements() []routing.IRoutingElement
 }
 
 // 消息队列组
@@ -129,6 +132,8 @@ type IMessageQueueGroup interface {
 	GetQueueAt(index int) (IMessageContextQueue, error)
 	// 配置入口
 	Config() IMessageQueueGroupConfig
+	// 遍历元素
+	ForEachElement(f func(index int, ele IMessageContextQueue) (stop bool))
 }
 
 func NewMessageQueueGroup() (config IMessageQueueGroupConfig, group IMessageQueueGroup) {
@@ -143,10 +148,6 @@ type queueGroup struct {
 	group  collectionx.OrderHashGroup
 	autoId int
 	mu     sync.RWMutex
-}
-
-func (g *queueGroup) Config() IMessageQueueGroupConfig {
-	return g
 }
 
 func (g *queueGroup) QueueSize() int {
@@ -291,6 +292,17 @@ func (g *queueGroup) InitQueueGroup(settings []QueueSetting) (queues []IMessageC
 	return queues, nil
 }
 
+func (g *queueGroup) RoutingElements() []routing.IRoutingElement {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	rs := make([]routing.IRoutingElement, 0, g.QueueSize())
+	g.group.ForEachElement(func(_ int, ele collectionx.IOrderHashElement) (stop bool) {
+		rs = append(rs, ele.(routing.IRoutingElement))
+		return false
+	})
+	return rs
+}
+
 //-------------------------
 
 func (g *queueGroup) ReadMessageFrom(queueId string) (msg message.IMessageContext, err error) {
@@ -392,6 +404,20 @@ func (g *queueGroup) GetQueueAt(index int) (IMessageContextQueue, error) {
 	defer g.mu.RUnlock()
 	return g.getQueueAt(index)
 }
+
+func (g *queueGroup) Config() IMessageQueueGroupConfig {
+	return g
+}
+
+func (g *queueGroup) ForEachElement(f func(index int, ele IMessageContextQueue) (stop bool)) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	g.group.ForEachElement(func(idx int, ele collectionx.IOrderHashElement) (stop bool) {
+		return f(idx, ele.(IMessageContextQueue))
+	})
+}
+
+//-------------------
 
 func (g *queueGroup) getQueue(queueId string) (IMessageContextQueue, error) {
 	if ele, ok := g.group.Get(queueId); ok {

@@ -27,7 +27,7 @@ func (s *neverStrategy) TargetSize() int {
 	return 0
 }
 
-func (s *neverStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *neverStrategy) Route(routingKey string) (targets []string, err error) {
 	return nil, ErrRoutingUnSupport
 }
 

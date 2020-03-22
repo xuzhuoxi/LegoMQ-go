@@ -69,4 +69,13 @@ func (b *mqBroker) InitBroker(setting BrokerSetting) error {
 	b.producerGroup.Config().InitProducerGroup(setting.ProducerGroup)
 	b.queueGroup.Config().InitQueueGroup(setting.QueueGroup)
 	b.consumerGroup.Config().InitConsumerGroup(setting.ConsumerGroup)
+	return nil
+}
+
+func (b *mqBroker) EngineStart() error {
+	panic("implement me")
+}
+
+func (b *mqBroker) EngineStop() error {
+	panic("implement me")
 }

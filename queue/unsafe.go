@@ -22,9 +22,10 @@ func newUnsafeArrayQueue(maxSize int) (c *unsafeCache, err error) {
 //---------------------------------
 
 type unsafeCache struct {
-	id  string
-	max int
-	arr []message.IMessageContext
+	id      string
+	formats []string
+	max     int
+	arr     []message.IMessageContext
 }
 
 func (c *unsafeCache) Id() string {
@@ -33,6 +34,14 @@ func (c *unsafeCache) Id() string {
 
 func (c *unsafeCache) SetId(Id string) {
 	c.id = Id
+}
+
+func (c *unsafeCache) Formats() []string {
+	return c.formats
+}
+
+func (c *unsafeCache) SetFormat(formats []string) {
+	c.formats = formats
 }
 
 func (c *unsafeCache) MaxSize() int {

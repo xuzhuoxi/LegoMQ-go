@@ -14,7 +14,7 @@ func (s *wordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *wordsStrategy) Route(routingKey string) (targets []string, err error) {
+func (s *wordsStrategy) Route(routingKey string) (targetIds []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -28,13 +28,13 @@ func (s *wordsStrategy) Route(routingKey string) (targets []string, err error) {
 		}
 		for _, routingFormat := range formats {
 			if s.match(lowerRoutingKey, routingFormat) {
-				targets = append(targets, s.Targets[idx].Id())
+				targetIds = append(targetIds, s.Targets[idx].Id())
 				break
 			}
 		}
 	}
-	if nil != targets {
-		return targets, nil
+	if nil != targetIds {
+		return targetIds, nil
 	} else {
 		return nil, ErrRoutingFail
 	}
@@ -54,7 +54,11 @@ func (s *caseWordsStrategy) Mode() RoutingMode {
 	return CaseWordsRouting
 }
 
-func (s *caseWordsStrategy) Route(routingKey string) (targets []IRoutingElement, err error) {
+func (s *caseWordsStrategy) Config() IRoutingStrategyConfig {
+	return s
+}
+
+func (s *caseWordsStrategy) Route(routingKey string) (targetIds []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -67,13 +71,13 @@ func (s *caseWordsStrategy) Route(routingKey string) (targets []IRoutingElement,
 		}
 		for _, routingFormat := range formats {
 			if s.match(routingKey, routingFormat) {
-				targets = append(targets, s.Targets[idx])
+				targetIds = append(targetIds, s.Targets[idx].Id())
 				break
 			}
 		}
 	}
-	if nil != targets {
-		return targets, nil
+	if nil != targetIds {
+		return targetIds, nil
 	} else {
 		return nil, ErrRoutingFail
 	}
