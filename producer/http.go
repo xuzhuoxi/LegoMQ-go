@@ -5,6 +5,7 @@ import (
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"net/http"
+	"time"
 )
 
 func NewHttpMessageProducer() IHttpMessageProducer {
@@ -61,8 +62,12 @@ func (p *httpMessageProducer) StartHttpListener(addr string) error {
 	if p.httpServer.Running() {
 		return netx.ErrHttpServerStarted
 	}
-	go p.httpServer.StartServer(addr)
-	return nil
+	var err error
+	go func() {
+		err = p.httpServer.StartServer(addr)
+	}()
+	time.Sleep(time.Millisecond * 20)
+	return err
 }
 
 func (p *httpMessageProducer) StopHttpListener() error {

@@ -4,6 +4,7 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
+	"time"
 )
 
 func NewRPCMessageProducer() IRPCMessageProducer {
@@ -56,8 +57,12 @@ func (p *rpcMessageProducer) Register(rcvr interface{}) error {
 }
 
 func (p *rpcMessageProducer) StartRPCListener(addr string) error {
-	go p.rpcServer.StartServer(addr)
-	return nil
+	var err error
+	go func() {
+		p.rpcServer.StartServer(addr)
+	}()
+	time.Sleep(time.Millisecond * 20)
+	return err
 }
 
 func (p *rpcMessageProducer) StopRPCListener() error {

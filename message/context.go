@@ -1,6 +1,7 @@
 package message
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -30,6 +31,12 @@ type messageContext struct {
 	index     int
 
 	body interface{}
+}
+
+func (c *messageContext) String() string {
+	return fmt.Sprintf("[MessageContext]{routingKey=%s,header=%s,sender=%s,receiver=%s,timestamp=%d,index=%d,body=%s}",
+		c.routingKey, fmt.Sprint(c.header), c.sender, c.receiver, c.timestamp, c.index, fmt.Sprint(c.body))
+	panic("implement me")
 }
 
 func (c *messageContext) RoutingKey() string {

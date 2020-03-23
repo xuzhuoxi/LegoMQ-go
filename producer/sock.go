@@ -4,6 +4,7 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
+	"time"
 )
 
 func NewSockMessageProducer(sockNetwork netx.SockNetwork) (p ISockMessageProducer, err error) {
@@ -72,8 +73,12 @@ func (p *sockMessageProducer) StartSockListener(params netx.SockParams) error {
 	if p.sockServer.Running() {
 		return netx.ErrSockServerStarted
 	}
-	go p.sockServer.StartServer(params)
-	return nil
+	var err error
+	go func() {
+		err = p.sockServer.StartServer(params)
+	}()
+	time.Sleep(time.Millisecond * 20)
+	return err
 }
 
 func (p *sockMessageProducer) StopSockListener() error {
