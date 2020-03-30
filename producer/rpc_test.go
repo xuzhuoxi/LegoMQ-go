@@ -23,7 +23,7 @@ type Arith struct {
 
 func (t *Arith) Add(args Args, reply *Reply) error {
 	reply.C = args.A + args.B
-	msg := message.NewMessageContext("", nil, "", "", reply.C)
+	msg := message.NewMessageContext("", "", nil, reply.C)
 	t.Producer.NotifyMessageProduced(msg)
 	return nil
 }

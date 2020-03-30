@@ -17,7 +17,7 @@ func TestNewSockMessageProducer(t *testing.T) {
 	server := producer.SockServer()
 
 	var sockHandler = func(data []byte, senderAddress string, other interface{}) (catch bool) {
-		msg := message.NewMessageContext(senderAddress, nil, senderAddress, "", data)
+		msg := message.NewMessageContext("", senderAddress, nil, data)
 		producer.NotifyMessageProduced(msg)
 		return true
 	}

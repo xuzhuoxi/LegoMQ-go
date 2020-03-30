@@ -2,7 +2,7 @@ package producer
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/infra-go/eventx"
+	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"testing"
 )
 
@@ -13,19 +13,26 @@ var settings = []ProducerSetting{
 
 func TestConsumerGroup(t *testing.T) {
 	config, group := NewMessageProducerGroup()
-	ps, _ := config.InitProducerGroup(settings)
-	for idx, _ := range ps {
-		ps[idx].AddEventListener(EventMessageOnProducer, func(evd *eventx.EventData) {
-			fmt.Println(evd.Data)
-		})
-	}
+	config.InitProducerGroup(settings)
+	config.SetProducedFunc(func(msg message.IMessageContext, producerId string) {
+		fmt.Println(producerId, msg)
+	}, nil)
 
-	group.NotifyMessageProduced(msgNil, "1")
 	var err error
 	err = group.NotifyMessageProduced(msgNil, "1")
-	fmt.Println("Err1:", err)
+	if nil != err {
+		fmt.Println("Err1:", err)
+	}
 	err = group.NotifyMessageProduced(msgEmpty, "2")
-	fmt.Println("Err2:", err)
+	if nil != err {
+		fmt.Println("Err2:", err)
+	}
 	err = group.NotifyMessageProduced(msgDefault, "3")
-	fmt.Println("Err3:", err)
+	if nil != err {
+		fmt.Println("Err3:", err)
+	}
+	err = group.NotifyMessageProduced(msgDefault, "999")
+	if nil != err {
+		fmt.Println("Err4:", err)
+	}
 }

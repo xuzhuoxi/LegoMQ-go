@@ -1,17 +1,19 @@
 package routing
 
+import "github.com/xuzhuoxi/LegoMQ-go/support"
+
 type neverStrategy struct {
 }
 
-func (s *neverStrategy) AppendRoutingTarget(target IRoutingElement) error {
+func (s *neverStrategy) AppendRoutingTarget(target support.IRoutingTarget) error {
 	return ErrRoutingUnSupport
 }
 
-func (s *neverStrategy) AppendRoutingTargets(targets []IRoutingElement) error {
+func (s *neverStrategy) AppendRoutingTargets(targets []support.IRoutingTarget) error {
 	return ErrRoutingUnSupport
 }
 
-func (s *neverStrategy) SetRoutingTargets(targets []IRoutingElement) error {
+func (s *neverStrategy) SetRoutingTargets(targets []support.IRoutingTarget) error {
 	return ErrRoutingUnSupport
 }
 
@@ -27,11 +29,13 @@ func (s *neverStrategy) TargetSize() int {
 	return 0
 }
 
-func (s *neverStrategy) Route(routingKey string) (targets []string, err error) {
+// 忽略routingKey，locateKey
+// 命中失败
+func (s *neverStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	return nil, ErrRoutingUnSupport
 }
 
-func (s *neverStrategy) match(routingKey string, routingFormat string) bool {
+func (s *neverStrategy) match(key string, format string) bool {
 	return false
 }
 

@@ -1,6 +1,9 @@
 package routing
 
-import "strings"
+import (
+	"github.com/xuzhuoxi/infra-go/slicex"
+	"strings"
+)
 
 type wordsStrategy struct {
 	StrategyConfig
@@ -14,34 +17,45 @@ func (s *wordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *wordsStrategy) Route(routingKey string) (targetIds []string, err error) {
+func (s *wordsStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
 		return nil, ErrRoutingFail
 	}
-	lowerRoutingKey := strings.ToLower(routingKey)
+	if "" != routingKey {
+		targets = s.wordsMath(strings.ToLower(routingKey), targets)
+	}
+	if "" != locateKey {
+		targets = s.wordsMath(strings.ToLower(locateKey), targets)
+	}
+	if 0 != len(targets) {
+		slicex.ClearDuplicateString(targets)
+		if 0 != len(targets) {
+			return targets, nil
+		}
+	}
+	return nil, ErrRoutingFail
+}
+
+func (s *wordsStrategy) match(lowerKey string, format string) bool {
+	return lowerKey == strings.ToLower(format)
+}
+
+func (s *wordsStrategy) wordsMath(lowerKey string, result []string) []string {
 	for idx, _ := range s.Targets {
 		formats := s.Targets[idx].Formats()
 		if len(formats) == 0 {
 			continue
 		}
 		for _, routingFormat := range formats {
-			if s.match(lowerRoutingKey, routingFormat) {
-				targetIds = append(targetIds, s.Targets[idx].Id())
+			if s.match(lowerKey, routingFormat) {
+				result = append(result, s.Targets[idx].Id())
 				break
 			}
 		}
 	}
-	if nil != targetIds {
-		return targetIds, nil
-	} else {
-		return nil, ErrRoutingFail
-	}
-}
-
-func (s *wordsStrategy) match(lowerRoutingKey string, routingFormat string) bool {
-	return lowerRoutingKey == strings.ToLower(routingFormat)
+	return result
 }
 
 //---------------------
@@ -58,33 +72,45 @@ func (s *caseWordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *caseWordsStrategy) Route(routingKey string) (targetIds []string, err error) {
+func (s *caseWordsStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
 		return nil, ErrRoutingFail
 	}
+	if "" != routingKey {
+		targets = s.wordsMath(routingKey, targets)
+	}
+	if "" != locateKey {
+		targets = s.wordsMath(locateKey, targets)
+	}
+	if 0 != len(targets) {
+		slicex.ClearDuplicateString(targets)
+		if 0 != len(targets) {
+			return targets, nil
+		}
+	}
+	return nil, ErrRoutingFail
+}
+
+func (s *caseWordsStrategy) match(key string, format string) bool {
+	return key == format
+}
+
+func (s *caseWordsStrategy) wordsMath(lowerKey string, result []string) []string {
 	for idx, _ := range s.Targets {
 		formats := s.Targets[idx].Formats()
 		if len(formats) == 0 {
 			continue
 		}
 		for _, routingFormat := range formats {
-			if s.match(routingKey, routingFormat) {
-				targetIds = append(targetIds, s.Targets[idx].Id())
+			if s.match(lowerKey, routingFormat) {
+				result = append(result, s.Targets[idx].Id())
 				break
 			}
 		}
 	}
-	if nil != targetIds {
-		return targetIds, nil
-	} else {
-		return nil, ErrRoutingFail
-	}
-}
-
-func (s *caseWordsStrategy) match(routingKey string, routingFormat string) bool {
-	return routingKey == routingFormat
+	return result
 }
 
 //---------------------

@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"fmt"
+	"github.com/xuzhuoxi/infra-go/logx"
 	"testing"
 )
 
@@ -13,12 +14,28 @@ var settings = []ConsumerSetting{
 func TestConsumerGroup(t *testing.T) {
 	config, group := NewMessageConsumerGroup()
 	config.InitConsumerGroup(settings)
-	group.ConsumeMessage(msgNil, "1")
-	var err error
+
+	logConsumer, err := group.GetConsumer("3")
+	if nil != err {
+		t.Fatal(err)
+	}
+	logConsumer.(ILogMessageConsumer).SetConsumerLevel(logx.LevelInfo)
+	logConsumer.(ILogMessageConsumer).GetLogger().SetConfig(logx.LogConfig{Type: logx.TypeConsole, Level: logx.LevelAll})
+
 	err = group.ConsumeMessage(msgNil, "1")
-	fmt.Println("Err1:", err)
+	if nil != err {
+		fmt.Println("Err1:", err)
+	}
 	err = group.ConsumeMessage(msgEmpty, "2")
-	fmt.Println("Err2:", err)
+	if nil != err {
+		fmt.Println("Err2:", err)
+	}
 	err = group.ConsumeMessage(msgDefault, "3")
-	fmt.Println("Err3:", err)
+	if nil != err {
+		fmt.Println("Err3:", err)
+	}
+	err = group.ConsumeMessage(msgDefault, "4")
+	if nil != err {
+		fmt.Println("Err4:", err)
+	}
 }

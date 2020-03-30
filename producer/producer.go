@@ -3,8 +3,8 @@ package producer
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
-	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"net/http"
 )
@@ -22,7 +22,7 @@ var (
 
 // 消息生产者
 type IMessageProducer interface {
-	collectionx.IOrderHashElement
+	support.IProducerBase
 	eventx.IEventDispatcher
 	// 生产消息
 	// 抛出事件 EventMessageOnProducer
@@ -87,8 +87,10 @@ const (
 )
 
 type ProducerSetting struct {
-	Id   string
-	Mode ProducerMode
+	Id        string
+	Mode      ProducerMode
+	LocateKey string
+	Addr      string
 }
 
 // 函数映射表
@@ -110,6 +112,7 @@ func NewMessageProducer(setting ProducerSetting) (c IMessageProducer, err error)
 		return nil, err
 	}
 	q.SetId(setting.Id)
+	q.SetLocateKey(setting.LocateKey)
 	return q, nil
 }
 

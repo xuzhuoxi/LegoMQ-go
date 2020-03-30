@@ -2,7 +2,7 @@ package routing
 
 import (
 	"errors"
-	"github.com/xuzhuoxi/infra-go/lang/collectionx"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 )
 
 var (
@@ -49,21 +49,15 @@ const (
 	CustomizeRouting
 )
 
-type IRoutingElement interface {
-	collectionx.IOrderHashElement
-	Formats() []string
-	SetFormat(formats []string)
-}
-
 type IRoutingStrategyConfig interface {
 	// 路由目标数量
 	TargetSize() int
 	// 追加路由目标
-	AppendRoutingTarget(target IRoutingElement) error
+	AppendRoutingTarget(target support.IRoutingTarget) error
 	// 追加路由目标
-	AppendRoutingTargets(targets []IRoutingElement) error
+	AppendRoutingTargets(targets []support.IRoutingTarget) error
 	// 设置路由目标
-	SetRoutingTargets(targets []IRoutingElement) error
+	SetRoutingTargets(targets []support.IRoutingTarget) error
 }
 
 // 路由策略接口
@@ -74,9 +68,9 @@ type IRoutingStrategy interface {
 	Config() IRoutingStrategyConfig
 
 	// 路由函数
-	Route(routingKey string) (targetIds []string, err error)
+	Route(routingKey string, locateKey string) (targetIds []string, err error)
 	// 匹配检查
-	match(routingKey string, routingFormat string) bool
+	match(key string, format string) bool
 }
 
 // 路由策略注册入口

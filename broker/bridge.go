@@ -2,6 +2,7 @@ package broker
 
 import (
 	"errors"
+	"fmt"
 	"github.com/xuzhuoxi/LegoMQ-go/consumer"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/producer"
@@ -38,6 +39,16 @@ type IBridgeQueue2Consumer interface {
 	Unlink() error
 }
 
+func NewBridgeProducer2Queue() IBridgeProducer2Queue {
+	return newBridgeProducer2Queue()
+}
+
+func NewBridgeQueue2Consumer() IBridgeQueue2Consumer {
+	return newBridgeQueue2Consumer()
+}
+
+//---------------
+
 func newBridgeProducer2Queue() IBridgeProducer2Queue {
 	return &p2qBridge{}
 }
@@ -45,8 +56,6 @@ func newBridgeProducer2Queue() IBridgeProducer2Queue {
 func newBridgeQueue2Consumer() IBridgeQueue2Consumer {
 	return &q2cBridge{}
 }
-
-//---------------
 
 type p2qBridge struct {
 	pGroup  producer.IMessageProducerGroup
@@ -106,8 +115,7 @@ func (b *p2qBridge) Link() error {
 		return ErrBridgeStarted
 	}
 	b.routing.Config().SetRoutingTargets(b.qGroup.Config().RoutingElements())
-	b.pGroup.AddEventListener(producer.EventMessageOnProducer, b.onProduced)
-	b.pGroup.AddEventListener(producer.EventMultiMessageOnProducer, b.onMultiProduced)
+	b.pGroup.Config().SetProducedFunc(b.onProduced, b.onMultiProduced)
 	b.started = true
 	return nil
 }
@@ -118,32 +126,28 @@ func (b *p2qBridge) Unlink() error {
 	if !b.started {
 		return ErrBridgeStopped
 	}
-	b.pGroup.RemoveEventListener(producer.EventMultiMessageOnProducer, b.onMultiProduced)
-	b.pGroup.RemoveEventListener(producer.EventMessageOnProducer, b.onProduced)
 	b.pGroup, b.routing, b.qGroup = nil, nil, nil
 	b.started = false
 	return nil
 }
 
-func (b *p2qBridge) onProduced(evt *eventx.EventData) {
-	msg := evt.Data.(message.IMessageContext)
+func (b *p2qBridge) onProduced(msg message.IMessageContext, locateKey string) {
 	if nil == msg {
 		return
 	}
-	tIds, err := b.routing.Route(msg.RoutingKey())
+	tIds, err := b.routing.Route(msg.RoutingKey(), locateKey)
 	if nil != err {
 		return
 	}
 	b.qGroup.WriteMessageToMulti(msg, tIds)
 }
 
-func (b *p2qBridge) onMultiProduced(evt *eventx.EventData) {
-	msgArr := evt.Data.([]message.IMessageContext)
+func (b *p2qBridge) onMultiProduced(msgArr []message.IMessageContext, locateKey string) {
 	if 0 == len(msgArr) {
 		return
 	}
 	for idx, _ := range msgArr {
-		tIds, err := b.routing.Route(msgArr[idx].RoutingKey())
+		tIds, err := b.routing.Route(msgArr[idx].RoutingKey(), locateKey)
 		if nil != err {
 			return
 		}
@@ -243,18 +247,19 @@ func (b *q2cBridge) Unlink() error {
 }
 
 func (b *q2cBridge) onTime(evt *eventx.EventData) {
+	fmt.Println(22222222)
 	b.qGroup.ForEachElement(func(index int, ele queue.IMessageContextQueue) (stop bool) {
 		count, _ := ele.ReadContextsTo(b.msgCache[index])
 		if count > 0 {
-			b.handleMessages(b.msgCache[index][:count])
+			b.handleMessages(b.msgCache[index][:count], ele.LocateKey())
 		}
 		return false
 	})
 }
 
-func (b *q2cBridge) handleMessages(msgs []message.IMessageContext) {
+func (b *q2cBridge) handleMessages(msgs []message.IMessageContext, locateKey string) {
 	for index, _ := range msgs {
-		ids, err := b.routing.Route(msgs[index].RoutingKey())
+		ids, err := b.routing.Route(msgs[index].RoutingKey(), locateKey)
 		if nil != err {
 			continue
 		}

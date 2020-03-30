@@ -11,9 +11,15 @@ func TestClearConsumer_ConsumeMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = consumer.ConsumeMessage(msgNil)
-	fmt.Println("Err1:", err)
+	if nil != err {
+		fmt.Println("Err1:", err)
+	}
 	err = consumer.ConsumeMessage(msgEmpty)
-	fmt.Println("Err2:", err)
+	if nil != err {
+		fmt.Println("Err2:", err)
+	}
 	err = consumer.ConsumeMessage(msgDefault)
-	fmt.Println("Err3:", err)
+	if nil != err {
+		fmt.Println("Err3:", err)
+	}
 }

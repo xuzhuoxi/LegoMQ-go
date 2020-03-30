@@ -14,12 +14,11 @@ func TestHttpMessageProducer_HttpServer(t *testing.T) {
 	s.MapFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		pageInfo := []byte("The time is: " + time.Now().Format(time.RFC1123))
 		pageInfo = append(pageInfo, []byte("/n")...)
-		host := r.Host
 		msgBody := r.FormValue("msg")
 		pageInfo = append(pageInfo, []byte("msg="+msgBody)...)
 		w.Write(pageInfo)
 
-		msg := message.NewMessageContext(host, nil, host, host, msgBody)
+		msg := message.NewMessageContext("", r.Host, nil, msgBody)
 		s.NotifyMessageProduced(msg)
 	})
 	s.AddEventListener(EventMessageOnProducer, onHttpProduced)

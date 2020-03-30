@@ -2,6 +2,7 @@ package producer
 
 import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"time"
@@ -23,17 +24,9 @@ func newSockMessageProducer() IMessageProducer {
 
 type sockMessageProducer struct {
 	eventx.EventDispatcher
+	support.ElementSupport
 
-	id         string
 	sockServer netx.ISockServer
-}
-
-func (p *sockMessageProducer) Id() string {
-	return p.id
-}
-
-func (p *sockMessageProducer) SetId(Id string) {
-	p.id = Id
 }
 
 func (p *sockMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
@@ -95,7 +88,7 @@ func (p *sockMessageProducer) notifyMultiMsgProduced(msg []message.IMessageConte
 }
 
 func (p *sockMessageProducer) onSockPackTest(data []byte, senderAddress string, other interface{}) (catch bool) {
-	msg := message.NewMessageContext(senderAddress, nil, senderAddress, senderAddress, data)
+	msg := message.NewMessageContext("", senderAddress, nil, data)
 	p.notifyMsgProduced(msg)
 	return true
 }

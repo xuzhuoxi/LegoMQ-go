@@ -2,6 +2,7 @@ package queue
 
 import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 )
 
 func NewChannelQueue(maxSize int) (c IMessageContextQueue, err error) {
@@ -14,25 +15,9 @@ func NewChannelQueue(maxSize int) (c IMessageContextQueue, err error) {
 //---------------------------------
 
 type channelCache struct {
+	support.ElementSupport
+
 	channel chan message.IMessageContext
-	id      string
-	formats []string
-}
-
-func (c *channelCache) Id() string {
-	return c.id
-}
-
-func (c *channelCache) SetId(Id string) {
-	c.id = Id
-}
-
-func (c *channelCache) Formats() []string {
-	return c.formats
-}
-
-func (c *channelCache) SetFormat(formats []string) {
-	c.formats = formats
 }
 
 func (c *channelCache) MaxSize() int {

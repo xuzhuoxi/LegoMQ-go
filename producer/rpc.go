@@ -2,6 +2,7 @@ package producer
 
 import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"time"
@@ -20,16 +21,9 @@ func newRPCMessageProducer() IMessageProducer {
 
 type rpcMessageProducer struct {
 	eventx.EventDispatcher
-	id        string
+	support.ElementSupport
+
 	rpcServer netx.IRPCServer
-}
-
-func (p *rpcMessageProducer) Id() string {
-	return p.id
-}
-
-func (p *rpcMessageProducer) SetId(Id string) {
-	p.id = Id
 }
 
 func (p *rpcMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {

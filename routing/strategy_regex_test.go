@@ -2,6 +2,7 @@ package routing
 
 import (
 	"fmt"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"testing"
 )
 
@@ -44,13 +45,13 @@ func TestRegexStrategy_Route(t *testing.T) {
 		t.Fatal(err)
 	}
 	cfg := s.Config()
-	cfg.AppendRoutingTargets([]IRoutingElement{ele0, ele1, ele2, ele3, ele4, ele5, ele6})
-	targets, err := s.Route(routingKey0)
+	cfg.AppendRoutingTargets([]support.IRoutingTarget{ele0, ele1, ele2, ele3, ele4, ele5, ele6})
+	targets, err := s.Route(routingKey0, "")
 	if nil != err {
 		t.Fatal(err)
 	}
 	fmt.Println(targets)
-	targets, err = s.Route(routingKey1)
+	targets, err = s.Route(routingKey1, "")
 	if nil != err {
 		t.Fatal(err)
 	}

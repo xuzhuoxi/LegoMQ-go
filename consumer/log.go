@@ -10,18 +10,24 @@ func NewLogConsumer() ILogMessageConsumer {
 	return newLogConsumer().(ILogMessageConsumer)
 }
 
-func newLogConsumer() IMessageConsumer {
+func NewConsoleLogConsumer() ILogMessageConsumer {
 	rs := &logConsumer{logger: logx.NewLogger()}
 	rs.level = logx.LevelTrace
 	rs.logger.SetConfig(logx.LogConfig{Type: logx.TypeConsole, Level: logx.LevelAll})
 	return rs
 }
 
+func newLogConsumer() IMessageConsumer {
+	rs := &logConsumer{logger: logx.NewLogger()}
+	return rs
+}
+
 type logConsumer struct {
 	id      string
 	formats []string
-	logger  logx.ILogger
-	level   logx.LogLevel
+
+	logger logx.ILogger
+	level  logx.LogLevel
 }
 
 func (c *logConsumer) Id() string {

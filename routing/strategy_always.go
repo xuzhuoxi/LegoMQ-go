@@ -12,20 +12,22 @@ func (s *alwaysStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *alwaysStrategy) Route(routingKey string) (targetIds []string, err error) {
+// 忽略routingKey，locateKey
+// 命中全部
+func (s *alwaysStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
 		return nil, ErrRoutingFail
 	}
-	targetIds = make([]string, len(s.Targets), len(s.Targets))
+	targets = make([]string, len(s.Targets), len(s.Targets))
 	for idx, _ := range s.Targets {
-		targetIds[idx] = s.Targets[idx].Id()
+		targets[idx] = s.Targets[idx].Id()
 	}
 	return
 }
 
-func (s *alwaysStrategy) match(routingKey string, routingFormat string) bool {
+func (s *alwaysStrategy) match(key string, format string) bool {
 	return true
 }
 

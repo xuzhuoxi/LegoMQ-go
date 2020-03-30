@@ -10,71 +10,55 @@ func NewSafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
 	if nil != e {
 		return nil, e
 	}
-	return &safeCache{unsafe: *us}, nil
+	return &safeCache{unsafeCache: *us}, nil
 }
 
 //---------------------------------
 
 type safeCache struct {
-	unsafe unsafeCache
+	unsafeCache
 
 	mu sync.RWMutex
 }
 
-func (c *safeCache) Id() string {
-	return c.unsafe.Id()
-}
-
-func (c *safeCache) SetId(Id string) {
-	c.unsafe.SetId(Id)
-}
-
-func (c *safeCache) Formats() []string {
-	return c.unsafe.Formats()
-}
-
-func (c *safeCache) SetFormat(formats []string) {
-	c.unsafe.SetFormat(formats)
-}
-
 func (c *safeCache) MaxSize() int {
-	return c.unsafe.MaxSize()
+	return c.unsafeCache.MaxSize()
 }
 
 func (c *safeCache) Size() int {
 	c.mu.RUnlock()
 	defer c.mu.RUnlock()
-	return c.unsafe.Size()
+	return c.unsafeCache.Size()
 }
 
 func (c *safeCache) WriteContext(ctx message.IMessageContext) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.unsafe.WriteContext(ctx)
+	return c.unsafeCache.WriteContext(ctx)
 }
 
 func (c *safeCache) WriteContexts(ctx []message.IMessageContext) (count int, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.unsafe.WriteContexts(ctx)
+	return c.unsafeCache.WriteContexts(ctx)
 }
 
 func (c *safeCache) ReadContext() (ctx message.IMessageContext, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.unsafe.ReadContext()
+	return c.unsafeCache.ReadContext()
 }
 
 func (c *safeCache) ReadContexts(count int) (ctx []message.IMessageContext, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.unsafe.ReadContexts(count)
+	return c.unsafeCache.ReadContexts(count)
 }
 
 func (c *safeCache) ReadContextsTo(ctx []message.IMessageContext) (count int, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.unsafe.ReadContextsTo(ctx)
+	return c.unsafeCache.ReadContextsTo(ctx)
 }
 
 func (c *safeCache) Close() {

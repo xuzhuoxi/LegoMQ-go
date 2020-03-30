@@ -16,24 +16,30 @@ func (s *hashStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *hashStrategy) Route(routingKey string) (targets []string, err error) {
+// 忽略locateKey
+func (s *hashStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
-	if len(s.Targets) == 0 {
+	if len(s.Targets) == 0 || "" == routingKey {
 		return nil, ErrRoutingFail
 	}
-	val := md5.Sum([]byte(routingKey))
-	rs := int(0)
-	for _, v := range val {
-		rs += int(v)
-	}
-	index := rs % len(s.Targets)
+	index := s.md5Sum(routingKey, len(s.Targets))
 	targets = append(targets, s.Targets[index].Id())
 	return
 }
 
-func (s *hashStrategy) match(routingKey string, routingFormat string) bool {
+func (s *hashStrategy) match(key string, format string) bool {
 	return false
+}
+
+func (s *hashStrategy) md5Sum(key string, max int) int {
+	val := md5.Sum([]byte(key))
+	rs := int(0)
+	for _, v := range val {
+		rs += int(v)
+	}
+	rs = rs % max
+	return rs
 }
 
 //---------------------------------

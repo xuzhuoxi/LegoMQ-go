@@ -3,7 +3,7 @@ package queue
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/LegoMQ-go/routing"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 )
 
 var (
@@ -57,7 +57,7 @@ type IMessageContextQueueWriter interface {
 }
 
 type IMessageContextQueue interface {
-	routing.IRoutingElement
+	support.IQueueBase
 	// Cache最大容量
 	MaxSize() int
 	// Cache当前容量
@@ -84,10 +84,11 @@ const (
 )
 
 type QueueSetting struct {
-	Id      string
-	Mode    QueueMode
-	Size    int
-	Formats []string
+	Id        string
+	Mode      QueueMode
+	Size      int
+	LocateKey string
+	Formats   []string
 }
 
 // 函数映射表
@@ -109,6 +110,7 @@ func NewContextQueue(setting QueueSetting) (c IMessageContextQueue, err error) {
 		return nil, err
 	}
 	q.SetId(setting.Id)
+	q.SetLocateKey(setting.LocateKey)
 	q.SetFormat(setting.Formats)
 	return q, nil
 }

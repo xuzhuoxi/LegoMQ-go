@@ -16,7 +16,9 @@ func (s *randomStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *randomStrategy) Route(routingKey string) (targets []string, err error) {
+// 忽略routingKey，locateKey
+// 随机选择
+func (s *randomStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -27,7 +29,7 @@ func (s *randomStrategy) Route(routingKey string) (targets []string, err error) 
 	return
 }
 
-func (s *randomStrategy) match(routingKey string, routingFormat string) bool {
+func (s *randomStrategy) match(key string, format string) bool {
 	return false
 }
 

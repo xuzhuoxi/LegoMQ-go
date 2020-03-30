@@ -3,7 +3,7 @@ package queue
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/LegoMQ-go/routing"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -66,7 +66,7 @@ type IMessageQueueGroupConfig interface {
 	// 使用配置初始化队列组，覆盖旧配置
 	InitQueueGroup(settings []QueueSetting) (queues []IMessageContextQueue, err error)
 	// 路由信息
-	RoutingElements() []routing.IRoutingElement
+	RoutingElements() []support.IRoutingTarget
 }
 
 // 消息队列组
@@ -292,12 +292,12 @@ func (g *queueGroup) InitQueueGroup(settings []QueueSetting) (queues []IMessageC
 	return queues, nil
 }
 
-func (g *queueGroup) RoutingElements() []routing.IRoutingElement {
+func (g *queueGroup) RoutingElements() []support.IRoutingTarget {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	rs := make([]routing.IRoutingElement, 0, g.QueueSize())
+	rs := make([]support.IRoutingTarget, 0, g.QueueSize())
 	g.group.ForEachElement(func(_ int, ele collectionx.IOrderHashElement) (stop bool) {
-		rs = append(rs, ele.(routing.IRoutingElement))
+		rs = append(rs, ele.(support.IRoutingTarget))
 		return false
 	})
 	return rs

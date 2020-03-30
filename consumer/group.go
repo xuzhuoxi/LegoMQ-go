@@ -3,7 +3,7 @@ package consumer
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/LegoMQ-go/routing"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -64,7 +64,7 @@ type IMessageConsumerGroupConfig interface {
 	// 使用配置初始化消费者组，覆盖旧配置
 	InitConsumerGroup(settings []ConsumerSetting) (consumers []IMessageConsumer, err error)
 	// 路由元素
-	RoutingElements() []routing.IRoutingElement
+	RoutingElements() []support.IRoutingTarget
 }
 
 type IMessageConsumerGroup interface {
@@ -198,7 +198,7 @@ func (g *consumerGroup) RemoveConsumer(consumerId string) (consumer IMessageCons
 }
 
 func (g *consumerGroup) RemoveConsumers(consumerIdArr []string) (consumers []IMessageConsumer, err []error) {
-	if len(consumers) == 0 {
+	if len(consumerIdArr) == 0 {
 		return
 	}
 	g.mu.Lock()
@@ -255,12 +255,12 @@ func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) (consumers
 	return consumers, nil
 }
 
-func (g *consumerGroup) RoutingElements() []routing.IRoutingElement {
+func (g *consumerGroup) RoutingElements() []support.IRoutingTarget {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	rs := make([]routing.IRoutingElement, 0, g.ConsumerSize())
+	rs := make([]support.IRoutingTarget, 0, g.ConsumerSize())
 	g.group.ForEachElement(func(_ int, ele collectionx.IOrderHashElement) (stop bool) {
-		rs = append(rs, ele.(routing.IRoutingElement))
+		rs = append(rs, ele.(support.IRoutingTarget))
 		return false
 	})
 	return rs

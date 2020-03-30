@@ -13,7 +13,9 @@ func (s *sequenceStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *sequenceStrategy) Route(routingKey string) (targets []string, err error) {
+// 忽略routingKey，locateKey
+// 列表循环命中
+func (s *sequenceStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -27,7 +29,7 @@ func (s *sequenceStrategy) Route(routingKey string) (targets []string, err error
 	return
 }
 
-func (s *sequenceStrategy) match(routingKey string, routingFormat string) bool {
+func (s *sequenceStrategy) match(key string, format string) bool {
 	return false
 }
 

@@ -2,6 +2,7 @@ package queue
 
 import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 )
 
 func NewUnsafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
@@ -22,26 +23,9 @@ func newUnsafeArrayQueue(maxSize int) (c *unsafeCache, err error) {
 //---------------------------------
 
 type unsafeCache struct {
-	id      string
-	formats []string
-	max     int
-	arr     []message.IMessageContext
-}
-
-func (c *unsafeCache) Id() string {
-	return c.id
-}
-
-func (c *unsafeCache) SetId(Id string) {
-	c.id = Id
-}
-
-func (c *unsafeCache) Formats() []string {
-	return c.formats
-}
-
-func (c *unsafeCache) SetFormat(formats []string) {
-	c.formats = formats
+	support.ElementSupport
+	max int
+	arr []message.IMessageContext
 }
 
 func (c *unsafeCache) MaxSize() int {

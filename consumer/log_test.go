@@ -7,16 +7,19 @@ import (
 )
 
 func TestLogConsumer_ConsumeMessage(t *testing.T) {
-	consumer, err := LogConsumer.NewMessageConsumer()
-	if nil != err {
-		t.Fatal(err)
-	}
-	logConsumer := consumer.(ILogMessageConsumer)
+	logConsumer := NewConsoleLogConsumer()
 	logConsumer.SetConsumerLevel(logx.LevelInfo)
-	err = consumer.ConsumeMessage(msgNil)
-	fmt.Println("Err1:", err)
-	err = consumer.ConsumeMessage(msgEmpty)
-	fmt.Println("Err2:", err)
-	err = consumer.ConsumeMessage(msgDefault)
-	fmt.Println("Err3:", err)
+
+	err := logConsumer.ConsumeMessage(msgNil)
+	if nil != err {
+		fmt.Println("Err1:", err)
+	}
+	err = logConsumer.ConsumeMessage(msgEmpty)
+	if nil != err {
+		fmt.Println("Err2:", err)
+	}
+	err = logConsumer.ConsumeMessage(msgDefault)
+	if nil != err {
+		fmt.Println("Err3:", err)
+	}
 }

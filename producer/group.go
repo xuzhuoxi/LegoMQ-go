@@ -16,6 +16,9 @@ var (
 	ErrProducerIndexRange = errors.New("MessageProducer: Index out of range. ")
 )
 
+type FuncOnMessageProduced func(msg message.IMessageContext, locateKey string)
+type FuncOnMessagesProduced func(msg []message.IMessageContext, locateKey string)
+
 type IMessageProducerGroupConfig interface {
 	// 生产者数量
 	ProducerSize() int
@@ -51,6 +54,8 @@ type IMessageProducerGroupConfig interface {
 	// err:
 	//		ErrProducerIdUnknown:	ProducerId不存在
 	RemoveProducers(producerIdArr []string) (producers []IMessageProducer, err []error)
+	// 清空
+	ClearProducers()
 	// 替换一个生产者
 	// 根据ProducerId进行替换，如果找不到相同ProducerId，直接加入
 	// err:
@@ -63,10 +68,11 @@ type IMessageProducerGroupConfig interface {
 	UpdateProducers(producers []IMessageProducer) (err []error)
 	// 使用配置初始化生产者组，覆盖旧配置
 	InitProducerGroup(settings []ProducerSetting) (producers []IMessageProducer, err error)
+	// 设置响应行为
+	SetProducedFunc(f FuncOnMessageProduced, fs FuncOnMessagesProduced)
 }
 
 type IMessageProducerGroup interface {
-	eventx.IEventDispatcher
 	// 配置入口
 	Config() IMessageProducerGroupConfig
 	// 取生成者
@@ -100,10 +106,12 @@ func NewMessageProducerGroup() (config IMessageProducerGroupConfig, group IMessa
 //---------------------
 
 type producerGroup struct {
-	eventx.EventDispatcher
-	group  collectionx.OrderHashGroup
-	autoId int
-	mu     sync.RWMutex
+	group            collectionx.OrderHashGroup
+	autoId           int
+	funcMsgProduced  FuncOnMessageProduced
+	funcMsgsProduced FuncOnMessagesProduced
+
+	mu sync.RWMutex
 }
 
 func (g *producerGroup) Config() IMessageProducerGroupConfig {
@@ -206,7 +214,7 @@ func (g *producerGroup) RemoveProducer(producerId string) (producer IMessageProd
 }
 
 func (g *producerGroup) RemoveProducers(producerIdArr []string) (producers []IMessageProducer, err []error) {
-	if len(producers) == 0 {
+	if len(producerIdArr) == 0 {
 		return
 	}
 	g.mu.Lock()
@@ -222,6 +230,18 @@ func (g *producerGroup) RemoveProducers(producerIdArr []string) (producers []IMe
 		}
 	}
 	return
+}
+
+func (g *producerGroup) ClearProducers() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	removes := g.group.RemoveAll()
+	if len(removes) == 0 {
+		return
+	}
+	for idx, _ := range removes {
+		g.removeListeners(removes[idx].(IMessageProducer))
+	}
 }
 
 func (g *producerGroup) UpdateProducer(producer IMessageProducer) (err error) {
@@ -263,7 +283,7 @@ func (g *producerGroup) InitProducerGroup(settings []ProducerSetting) (producers
 	}
 	for idx, _ := range settings {
 		producer, err := NewMessageProducer(settings[idx])
-		err = g.group.Add(producer)
+		err = group.Add(producer)
 		if nil != err {
 			return nil, err
 		}
@@ -272,6 +292,12 @@ func (g *producerGroup) InitProducerGroup(settings []ProducerSetting) (producers
 	}
 	g.group = group
 	return producers, nil
+}
+
+func (g *producerGroup) SetProducedFunc(f FuncOnMessageProduced, fs FuncOnMessagesProduced) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.funcMsgProduced, g.funcMsgsProduced = f, fs
 }
 
 func (g *producerGroup) addListeners(producer IMessageProducer) {
@@ -285,11 +311,19 @@ func (g *producerGroup) removeListeners(producer IMessageProducer) {
 }
 
 func (g *producerGroup) onProduced(evt *eventx.EventData) {
-	g.DispatchEvent(EventMessageOnProducer, g, evt.Data)
+	if nil != g.funcMsgProduced {
+		ct := evt.CurrentTarget.(IMessageProducer)
+		msg := evt.Data.(message.IMessageContext)
+		g.funcMsgProduced(msg, ct.LocateKey())
+	}
 }
 
 func (g *producerGroup) onMultiProduced(evt *eventx.EventData) {
-	g.DispatchEvent(EventMultiMessageOnProducer, g, evt.Data)
+	if nil != g.funcMsgsProduced {
+		ct := evt.CurrentTarget.(IMessageProducer)
+		msg := evt.Data.([]message.IMessageContext)
+		g.funcMsgsProduced(msg, ct.LocateKey())
+	}
 }
 
 //----------------------

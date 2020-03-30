@@ -2,6 +2,7 @@ package producer
 
 import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"net/http"
@@ -21,17 +22,9 @@ func newHttpMessageProducer() IMessageProducer {
 
 type httpMessageProducer struct {
 	eventx.EventDispatcher
+	support.ElementSupport
 
-	id         string
 	httpServer netx.IHttpServer
-}
-
-func (p *httpMessageProducer) Id() string {
-	return p.id
-}
-
-func (p *httpMessageProducer) SetId(Id string) {
-	p.id = Id
 }
 
 func (p *httpMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
@@ -85,9 +78,8 @@ func (p *httpMessageProducer) notifyMultiMsgProduced(msg []message.IMessageConte
 //------------------
 
 func (p *httpMessageProducer) onRequestTest(w http.ResponseWriter, r *http.Request) error {
-	host := r.Host
 	msgBody := r.FormValue("msg")
-	msg := message.NewMessageContext(host, nil, host, host, msgBody)
+	msg := message.NewMessageContext("", r.Host, nil, msgBody)
 	p.notifyMsgProduced(msg)
 	return nil
 }
