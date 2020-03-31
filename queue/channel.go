@@ -9,7 +9,7 @@ func NewChannelQueue(maxSize int) (c IMessageContextQueue, err error) {
 	if maxSize <= 0 {
 		return nil, ErrSize
 	}
-	return &channelCache{channel: make(chan message.IMessageContext, 1)}, nil
+	return &channelCache{channel: make(chan message.IMessageContext, maxSize)}, nil
 }
 
 //---------------------------------
@@ -41,13 +41,12 @@ func (c *channelCache) WriteContexts(ctx []message.IMessageContext) (count int, 
 	if 0 == ctxLen {
 		return 0, ErrQueueCountZero
 	}
-	for idx, _ := range ctx {
-		if nil == ctx[idx] {
+	for count = 0; count < len(ctx); count++ {
+		if nil == ctx[count] {
 			err = ErrQueueMessageNil
 			continue
 		}
-		c.channel <- ctx[idx]
-		count += 1
+		c.channel <- ctx[count]
 	}
 	return
 }
@@ -88,16 +87,16 @@ func (c *channelCache) ReadContextsTo(ctx []message.IMessageContext) (count int,
 	if 0 == ctxLen {
 		return 0, ErrQueueCountZero
 	}
-	for i := 0; i < ctxLen; i++ {
+	for count = 0; count < ctxLen; count++ {
 		select {
 		case val := <-c.channel:
 			if val == nil {
-				return i, ErrQueueClosed
+				return count, ErrQueueClosed
 			} else {
-				ctx[i] = val
+				ctx[count] = val
 			}
 		default:
-			return i, ErrQueueEmpty
+			return count, ErrQueueEmpty
 		}
 	}
 	return

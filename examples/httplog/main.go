@@ -21,6 +21,7 @@ const (
 
 var (
 	httpProducer producer.IHttpMessageProducer
+	globalBroker broker.IMQBroker
 )
 
 var (
@@ -44,6 +45,7 @@ var (
 
 func main() {
 	mqConfig, mqBroker := broker.NewMQBroker()
+	globalBroker = mqBroker
 	mqConfig.InitBroker(brokerSetting)
 
 	p, _ := mqConfig.ProducerGroup().GetProducer("P01")
@@ -64,7 +66,7 @@ func main() {
 
 func onHttpRequest(w http.ResponseWriter, r *http.Request) {
 	logValue := r.FormValue(HttpPattern_Name)
-	fmt.Println("onHttopRequest:", logValue, r.RemoteAddr)
+	//fmt.Println("onHttopRequest:", logValue, r.RemoteAddr)
 	msg := message.NewMessageContext("", r.RemoteAddr, nil, logValue)
 	httpProducer.NotifyMessageProduced(msg)
 }

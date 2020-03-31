@@ -2,7 +2,6 @@ package broker
 
 import (
 	"errors"
-	"fmt"
 	"github.com/xuzhuoxi/LegoMQ-go/consumer"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/producer"
@@ -140,6 +139,14 @@ func (b *p2qBridge) onProduced(msg message.IMessageContext, locateKey string) {
 		return
 	}
 	b.qGroup.WriteMessageToMulti(msg, tIds)
+	//fmt.Println("onProduced:", msg, locateKey, tIds)
+	//_, _, err1, err2 := b.qGroup.WriteMessageToMulti(msg, tIds)
+	//if err1 != nil {
+	//	fmt.Println("err1:", err1)
+	//}
+	//if err2 != nil {
+	//	fmt.Println("err2:", err2)
+	//}
 }
 
 func (b *p2qBridge) onMultiProduced(msgArr []message.IMessageContext, locateKey string) {
@@ -180,7 +187,6 @@ func (b *q2cBridge) SetEntity(in queue.IMessageQueueGroup, out consumer.IMessage
 		return ErrBridgeConsumerNil
 	}
 	b.qGroup, b.cGroup = in, out
-	b.msgCache = make([][]message.IMessageContext, b.qGroup.Config().QueueSize(), b.qGroup.Config().QueueSize())
 	return nil
 }
 
@@ -217,15 +223,13 @@ func (b *q2cBridge) Link(duration time.Duration, maxMessage int) error {
 	if b.started {
 		return ErrBridgeStarted
 	}
+	b.initCache(maxMessage)
 	b.routing.Config().SetRoutingTargets(b.cGroup.Config().RoutingElements())
 	b.driver = NewTimeSliceDriver(duration)
 	b.driver.AddEventListener(EventOnTime, b.onTime)
 	err := b.driver.DriverStart()
 	if nil != err {
 		return err
-	}
-	for idx := b.qGroup.Config().QueueSize() - 1; idx >= 0; idx -= 1 {
-		b.msgCache[idx] = make([]message.IMessageContext, maxMessage, maxMessage)
 	}
 	b.started = true
 	return nil
@@ -246,15 +250,35 @@ func (b *q2cBridge) Unlink() error {
 	return nil
 }
 
+func (b *q2cBridge) initCache(maxMessage int) {
+	b.msgCache = make([][]message.IMessageContext, b.qGroup.Config().QueueSize(), b.qGroup.Config().QueueSize())
+	for idx, _ := range b.msgCache {
+		b.msgCache[idx] = make([]message.IMessageContext, maxMessage, maxMessage)
+	}
+}
+
 func (b *q2cBridge) onTime(evt *eventx.EventData) {
-	fmt.Println(22222222)
+	//fmt.Println(22222222)
 	b.qGroup.ForEachElement(func(index int, ele queue.IMessageContextQueue) (stop bool) {
+		//ctx, err := ele.ReadContext()
+		//if nil == err {
+		//	b.handleMessage(ctx, ele.LocateKey())
+		//}
+		//return false
 		count, _ := ele.ReadContextsTo(b.msgCache[index])
 		if count > 0 {
 			b.handleMessages(b.msgCache[index][:count], ele.LocateKey())
 		}
 		return false
 	})
+}
+
+func (b *q2cBridge) handleMessage(msg message.IMessageContext, locateKey string) {
+	ids, err := b.routing.Route(msg.RoutingKey(), locateKey)
+	if nil != err {
+		return
+	}
+	b.cGroup.ConsumeMessageMulti(msg, ids)
 }
 
 func (b *q2cBridge) handleMessages(msgs []message.IMessageContext, locateKey string) {

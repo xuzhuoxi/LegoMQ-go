@@ -347,17 +347,21 @@ func (g *queueGroup) WriteMessageToMulti(msg message.IMessageContext, queueIdArr
 	}
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	var err error
 	var q IMessageContextQueue
-	for _, queueId := range queueIdArr {
-		if q, err = g.getQueue(queueId); nil == err {
-			err = q.WriteContext(msg)
-			if nil != err {
-				err2 = err
-			}
-		} else {
-			err1 = ErrQueueIdUnknown
+	var err error
+	for idx, _ := range queueIdArr {
+		q, err = g.getQueue(queueIdArr[idx])
+		if nil != err {
+			failArr = append(failArr, queueIdArr[idx])
+			continue
 		}
+		err = q.WriteContext(msg)
+		if nil != err {
+			err2 = err
+			failArr = append(failArr, queueIdArr[idx])
+			continue
+		}
+		count++
 	}
 	return
 }
@@ -380,8 +384,8 @@ func (g *queueGroup) WriteMessagesToMulti(msg []message.IMessageContext, queueId
 	defer g.mu.RUnlock()
 	var err error
 	var q IMessageContextQueue
-	for _, queueId := range queueIdArr {
-		if q, err = g.getQueue(queueId); nil == err {
+	for idx, _ := range queueIdArr {
+		if q, err = g.getQueue(queueIdArr[idx]); nil == err {
 			_, err = q.WriteContexts(msg)
 			if nil != err {
 				err2 = err
