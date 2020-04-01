@@ -83,14 +83,6 @@ const (
 	CustomizeQueue
 )
 
-type QueueSetting struct {
-	Id        string
-	Mode      QueueMode
-	Size      int
-	LocateKey string
-	Formats   []string
-}
-
 // 函数映射表
 var newQueueFuncArr = make([]func(maxSize int) (c IMessageContextQueue, err error), 16, 16)
 
@@ -110,7 +102,7 @@ func NewContextQueue(setting QueueSetting) (c IMessageContextQueue, err error) {
 		return nil, err
 	}
 	q.SetId(setting.Id)
-	q.SetLocateKey(setting.LocateKey)
+	q.SetLocateId(setting.LocateId)
 	q.SetFormat(setting.Formats)
 	return q, nil
 }

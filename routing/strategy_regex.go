@@ -18,8 +18,8 @@ func (s *regexStrategy) Config() IRoutingStrategyConfig {
 }
 
 // 空字符串忽略
-// routingKey和locateKey只要命中其中一个，则判定为命中
-func (s *regexStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+// routingKey和locateId只要命中其中一个，则判定为命中
+func (s *regexStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -28,8 +28,8 @@ func (s *regexStrategy) Route(routingKey string, locateKey string) (targets []st
 	if "" != routingKey {
 		targets = s.regexMath(routingKey, targets)
 	}
-	if "" != locateKey {
-		targets = s.regexMath(locateKey, targets)
+	if "" != locateId {
+		targets = s.regexMath(locateId, targets)
 	}
 	if 0 != len(targets) {
 		slicex.ClearDuplicateString(targets)

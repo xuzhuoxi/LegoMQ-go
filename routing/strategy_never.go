@@ -29,9 +29,9 @@ func (s *neverStrategy) TargetSize() int {
 	return 0
 }
 
-// 忽略routingKey，locateKey
+// 忽略routingKey，locateId
 // 命中失败
-func (s *neverStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+func (s *neverStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	return nil, ErrRoutingUnSupport
 }
 

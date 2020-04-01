@@ -30,6 +30,7 @@ func (t *Arith) Add(args Args, reply *Reply) error {
 
 func TestNewRPCMessageProducer(t *testing.T) {
 	producer := NewRPCMessageProducer()
+	producer.InitRPCServer()
 	RObject := &Arith{Producer: producer}
 	producer.Register(RObject)
 	producer.AddEventListener(EventMessageOnProducer, onRPCProduced)

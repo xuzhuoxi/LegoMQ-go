@@ -17,7 +17,7 @@ func (s *wordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *wordsStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+func (s *wordsStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -26,8 +26,8 @@ func (s *wordsStrategy) Route(routingKey string, locateKey string) (targets []st
 	if "" != routingKey {
 		targets = s.wordsMath(strings.ToLower(routingKey), targets)
 	}
-	if "" != locateKey {
-		targets = s.wordsMath(strings.ToLower(locateKey), targets)
+	if "" != locateId {
+		targets = s.wordsMath(strings.ToLower(locateId), targets)
 	}
 	if 0 != len(targets) {
 		slicex.ClearDuplicateString(targets)
@@ -72,7 +72,7 @@ func (s *caseWordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-func (s *caseWordsStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+func (s *caseWordsStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {
@@ -81,8 +81,8 @@ func (s *caseWordsStrategy) Route(routingKey string, locateKey string) (targets 
 	if "" != routingKey {
 		targets = s.wordsMath(routingKey, targets)
 	}
-	if "" != locateKey {
-		targets = s.wordsMath(locateKey, targets)
+	if "" != locateId {
+		targets = s.wordsMath(locateId, targets)
 	}
 	if 0 != len(targets) {
 		slicex.ClearDuplicateString(targets)

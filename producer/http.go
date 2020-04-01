@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
@@ -10,12 +11,11 @@ import (
 )
 
 func NewHttpMessageProducer() IHttpMessageProducer {
-	return newHttpMessageProducer().(IHttpMessageProducer)
+	return &httpMessageProducer{}
 }
 
 func newHttpMessageProducer() IMessageProducer {
-	httpServer := netx.NewHttpServer()
-	return &httpMessageProducer{httpServer: httpServer}
+	return &httpMessageProducer{}
 }
 
 //------------------
@@ -23,8 +23,26 @@ func newHttpMessageProducer() IMessageProducer {
 type httpMessageProducer struct {
 	eventx.EventDispatcher
 	support.ElementSupport
+	ProducerSettingSupport
 
 	httpServer netx.IHttpServer
+}
+
+func (p *httpMessageProducer) InitProducer() error {
+	if "" == p.setting.Id {
+		return errors.New("Id is empty. ")
+	}
+	p.SetId(p.setting.Id)
+	p.SetLocateId(p.setting.LocateId)
+	return nil
+}
+
+func (p *httpMessageProducer) StartProducer() error {
+	return p.start(p.setting.Http.Addr)
+}
+
+func (p *httpMessageProducer) StopProducer() error {
+	return p.stop()
 }
 
 func (p *httpMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
@@ -43,6 +61,11 @@ func (p *httpMessageProducer) NotifyMessagesProduced(msg []message.IMessageConte
 	return nil
 }
 
+func (p *httpMessageProducer) InitHttpServer() (s netx.IHttpServer, err error) {
+	p.httpServer = netx.NewHttpServer()
+	return p.httpServer, nil
+}
+
 func (p *httpMessageProducer) HttpServer() netx.IHttpServer {
 	return p.httpServer
 }
@@ -52,6 +75,16 @@ func (p *httpMessageProducer) MapFunc(pattern string, f func(w http.ResponseWrit
 }
 
 func (p *httpMessageProducer) StartHttpListener(addr string) error {
+	return p.start(addr)
+}
+
+func (p *httpMessageProducer) StopHttpListener() error {
+	return p.stop()
+}
+
+//--------------------
+
+func (p *httpMessageProducer) start(addr string) error {
 	if p.httpServer.Running() {
 		return netx.ErrHttpServerStarted
 	}
@@ -63,7 +96,7 @@ func (p *httpMessageProducer) StartHttpListener(addr string) error {
 	return err
 }
 
-func (p *httpMessageProducer) StopHttpListener() error {
+func (p *httpMessageProducer) stop() error {
 	return p.httpServer.StopServer()
 }
 

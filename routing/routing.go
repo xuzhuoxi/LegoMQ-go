@@ -68,7 +68,7 @@ type IRoutingStrategy interface {
 	Config() IRoutingStrategyConfig
 
 	// 路由函数
-	Route(routingKey string, locateKey string) (targetIds []string, err error)
+	Route(routingKey string, locateId string) (targetIds []string, err error)
 	// 匹配检查
 	match(key string, format string) bool
 }

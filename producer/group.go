@@ -16,8 +16,8 @@ var (
 	ErrProducerIndexRange = errors.New("MessageProducer: Index out of range. ")
 )
 
-type FuncOnMessageProduced func(msg message.IMessageContext, locateKey string)
-type FuncOnMessagesProduced func(msg []message.IMessageContext, locateKey string)
+type FuncOnMessageProduced func(msg message.IMessageContext, locateId string)
+type FuncOnMessagesProduced func(msg []message.IMessageContext, locateId string)
 
 type IMessageProducerGroupConfig interface {
 	// 生产者数量
@@ -282,7 +282,10 @@ func (g *producerGroup) InitProducerGroup(settings []ProducerSetting) (producers
 		return nil, nil
 	}
 	for idx, _ := range settings {
-		producer, err := NewMessageProducer(settings[idx])
+		producer, err := settings[idx].NewMessageProducer()
+		if nil != err {
+			return nil, err
+		}
 		err = group.Add(producer)
 		if nil != err {
 			return nil, err
@@ -314,7 +317,7 @@ func (g *producerGroup) onProduced(evt *eventx.EventData) {
 	if nil != g.funcMsgProduced {
 		ct := evt.CurrentTarget.(IMessageProducer)
 		msg := evt.Data.(message.IMessageContext)
-		g.funcMsgProduced(msg, ct.LocateKey())
+		g.funcMsgProduced(msg, ct.LocateId())
 	}
 }
 
@@ -322,7 +325,7 @@ func (g *producerGroup) onMultiProduced(evt *eventx.EventData) {
 	if nil != g.funcMsgsProduced {
 		ct := evt.CurrentTarget.(IMessageProducer)
 		msg := evt.Data.([]message.IMessageContext)
-		g.funcMsgsProduced(msg, ct.LocateKey())
+		g.funcMsgsProduced(msg, ct.LocateId())
 	}
 }
 

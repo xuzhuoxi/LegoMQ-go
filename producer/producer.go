@@ -22,8 +22,8 @@ var (
 
 // 消息生产者
 type IMessageProducer interface {
-	support.IProducerBase
 	eventx.IEventDispatcher
+	support.IProducerBase
 	// 生产消息
 	// 抛出事件 EventMessageOnProducer
 	// err:
@@ -39,10 +39,12 @@ type IMessageProducer interface {
 // Socket服务消息生成者
 type ISockMessageProducer interface {
 	IMessageProducer
+
 	// 初始化服务实例
 	InitSockServer(sockNetwork netx.SockNetwork) (s netx.ISockServer, err error)
 	// Socket服务器
 	SockServer() netx.ISockServer
+
 	// 追加Socket服务器接收的信息的处理函数
 	AppendPackHandler(handler netx.FuncPackHandler) error
 	// 启动Socket服务器
@@ -54,8 +56,12 @@ type ISockMessageProducer interface {
 // Http服务消息生成者
 type IHttpMessageProducer interface {
 	IMessageProducer
+
+	// 初始化服务实例
+	InitHttpServer() (s netx.IHttpServer, err error)
 	// Http服务器
 	HttpServer() netx.IHttpServer
+
 	// 映射Http请求对应的处理函数
 	MapFunc(pattern string, f func(w http.ResponseWriter, r *http.Request))
 	// 启动Http服务器
@@ -67,8 +73,12 @@ type IHttpMessageProducer interface {
 // RPC服务消息生成者
 type IRPCMessageProducer interface {
 	IMessageProducer
+
+	// 初始化服务实例
+	InitRPCServer() (s netx.IRPCServer, err error)
 	// RPC服务器
 	RPCServer() netx.IRPCServer
+
 	// 注册RPC响应对象
 	Register(rcvr interface{}) error
 	// 启动RPC服务器
@@ -86,13 +96,6 @@ const (
 	CustomizeProducer
 )
 
-type ProducerSetting struct {
-	Id        string
-	Mode      ProducerMode
-	LocateKey string
-	Addr      string
-}
-
 // 函数映射表
 var newProducerFuncArr = make([]func() IMessageProducer, 16, 16)
 
@@ -106,14 +109,14 @@ func (m ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
 }
 
 // 根据创建生产者实例
-func NewMessageProducer(setting ProducerSetting) (c IMessageProducer, err error) {
-	q, err := setting.Mode.NewMessageProducer()
+func NewMessageProducer(id string, mode ProducerMode, locateId string) (c IMessageProducer, err error) {
+	p, err := mode.NewMessageProducer()
 	if nil != err {
 		return nil, err
 	}
-	q.SetId(setting.Id)
-	q.SetLocateKey(setting.LocateKey)
-	return q, nil
+	p.SetId(id)
+	p.SetLocateId(locateId)
+	return p, nil
 }
 
 // 注册

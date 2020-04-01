@@ -10,11 +10,11 @@ import (
 )
 
 func TestNewSockMessageProducer(t *testing.T) {
-	producer, err := NewSockMessageProducer(netx.TcpNetwork)
+	producer := NewSockMessageProducer()
+	server, err := producer.InitSockServer(netx.TcpNetwork)
 	if nil != err {
 		t.Fatal(err)
 	}
-	server := producer.SockServer()
 
 	var sockHandler = func(data []byte, senderAddress string, other interface{}) (catch bool) {
 		msg := message.NewMessageContext("", senderAddress, nil, data)

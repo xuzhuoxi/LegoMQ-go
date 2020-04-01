@@ -13,9 +13,9 @@ func (s *sequenceStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-// 忽略routingKey，locateKey
+// 忽略routingKey，locateId
 // 列表循环命中
-func (s *sequenceStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+func (s *sequenceStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {

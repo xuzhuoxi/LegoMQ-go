@@ -16,8 +16,8 @@ func (s *hashStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-// 忽略locateKey
-func (s *hashStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+// 忽略locateId
+func (s *hashStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 || "" == routingKey {

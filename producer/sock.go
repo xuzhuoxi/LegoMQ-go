@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
@@ -8,12 +9,8 @@ import (
 	"time"
 )
 
-func NewSockMessageProducer(sockNetwork netx.SockNetwork) (p ISockMessageProducer, err error) {
-	sockServer, err := sockNetwork.NewServer()
-	if nil != err {
-		return nil, err
-	}
-	return &sockMessageProducer{sockServer: sockServer}, nil
+func NewSockMessageProducer() ISockMessageProducer {
+	return &sockMessageProducer{}
 }
 
 func newSockMessageProducer() IMessageProducer {
@@ -25,8 +22,26 @@ func newSockMessageProducer() IMessageProducer {
 type sockMessageProducer struct {
 	eventx.EventDispatcher
 	support.ElementSupport
+	ProducerSettingSupport
 
 	sockServer netx.ISockServer
+}
+
+func (p *sockMessageProducer) InitProducer() error {
+	if "" == p.setting.Id {
+		return errors.New("Id is empty. ")
+	}
+	p.SetId(p.setting.Id)
+	p.SetLocateId(p.setting.LocateId)
+	return nil
+}
+
+func (p *sockMessageProducer) StartProducer() error {
+	return p.start(p.setting.Sock)
+}
+
+func (p *sockMessageProducer) StopProducer() error {
+	return p.stop()
 }
 
 func (p *sockMessageProducer) NotifyMessageProduced(msg message.IMessageContext) error {
@@ -63,6 +78,14 @@ func (p *sockMessageProducer) AppendPackHandler(handler netx.FuncPackHandler) er
 }
 
 func (p *sockMessageProducer) StartSockListener(params netx.SockParams) error {
+	return p.start(params)
+}
+
+func (p *sockMessageProducer) StopSockListener() error {
+	return p.stop()
+}
+
+func (p *sockMessageProducer) start(params netx.SockParams) error {
 	if p.sockServer.Running() {
 		return netx.ErrSockServerStarted
 	}
@@ -74,7 +97,7 @@ func (p *sockMessageProducer) StartSockListener(params netx.SockParams) error {
 	return err
 }
 
-func (p *sockMessageProducer) StopSockListener() error {
+func (p *sockMessageProducer) stop() error {
 	p.sockServer.GetPackHandlerContainer().ClearHandler(p.onSockPackTest)
 	return p.sockServer.StopServer()
 }

@@ -7,9 +7,9 @@ import (
 )
 
 var settings = []ProducerSetting{
-	ProducerSetting{Id: "1", Mode: HttpProducer},
-	ProducerSetting{Id: "2", Mode: RPCProducer},
-	ProducerSetting{Id: "3", Mode: SockProducer}}
+	{Id: "1", Mode: HttpProducer, LocateId: "H1"},
+	{Id: "2", Mode: RPCProducer, LocateId: "R2"},
+	{Id: "3", Mode: SockProducer, LocateId: "S3"}}
 
 func TestConsumerGroup(t *testing.T) {
 	config, group := NewMessageProducerGroup()

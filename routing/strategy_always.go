@@ -12,9 +12,9 @@ func (s *alwaysStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
-// 忽略routingKey，locateKey
+// 忽略routingKey，locateId
 // 命中全部
-func (s *alwaysStrategy) Route(routingKey string, locateKey string) (targets []string, err error) {
+func (s *alwaysStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
 	if len(s.Targets) == 0 {

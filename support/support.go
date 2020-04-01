@@ -7,8 +7,8 @@ import (
 type IIdSupport collectionx.IOrderHashElement
 
 type ILocateSupport interface {
-	LocateKey() string
-	SetLocateKey(locateKey string)
+	LocateId() string
+	SetLocateId(locateId string)
 }
 
 type IFormatsSupport interface {
@@ -40,9 +40,9 @@ type IRoutingTarget interface {
 //------------------------
 
 type ElementSupport struct {
-	id        string
-	locateKey string
-	formats   []string
+	id       string
+	locateId string
+	formats  []string
 }
 
 func (c *ElementSupport) Id() string {
@@ -53,12 +53,12 @@ func (c *ElementSupport) SetId(Id string) {
 	c.id = Id
 }
 
-func (c *ElementSupport) LocateKey() string {
-	return c.locateKey
+func (c *ElementSupport) LocateId() string {
+	return c.locateId
 }
 
-func (c *ElementSupport) SetLocateKey(locateKey string) {
-	c.locateKey = locateKey
+func (c *ElementSupport) SetLocateId(locateId string) {
+	c.locateId = locateId
 }
 
 func (c *ElementSupport) Formats() []string {

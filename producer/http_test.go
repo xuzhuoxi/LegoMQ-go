@@ -11,6 +11,7 @@ import (
 
 func TestHttpMessageProducer_HttpServer(t *testing.T) {
 	s := NewHttpMessageProducer()
+	s.InitHttpServer()
 	s.MapFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		pageInfo := []byte("The time is: " + time.Now().Format(time.RFC1123))
 		pageInfo = append(pageInfo, []byte("/n")...)
