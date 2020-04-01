@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
@@ -30,7 +29,7 @@ type httpMessageProducer struct {
 
 func (p *httpMessageProducer) InitProducer() error {
 	if "" == p.setting.Id {
-		return errors.New("Id is empty. ")
+		return support.ErrIdEmpty
 	}
 	p.SetId(p.setting.Id)
 	p.SetLocateId(p.setting.LocateId)

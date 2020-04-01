@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"errors"
 	"fmt"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
@@ -33,7 +32,7 @@ type logConsumer struct {
 
 func (c *logConsumer) InitConsumer() error {
 	if "" == c.setting.Id {
-		return errors.New("Id is empty. ")
+		return support.ErrIdEmpty
 	}
 	c.SetId(c.setting.Id)
 	c.SetFormats(c.setting.Formats)
