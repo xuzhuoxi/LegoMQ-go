@@ -13,7 +13,7 @@ type ILocateSupport interface {
 
 type IFormatsSupport interface {
 	Formats() []string
-	SetFormat(formats []string)
+	SetFormats(formats []string)
 }
 
 type IProducerBase interface {
@@ -65,6 +65,6 @@ func (c *ElementSupport) Formats() []string {
 	return c.formats
 }
 
-func (c *ElementSupport) SetFormat(formats []string) {
+func (c *ElementSupport) SetFormats(formats []string) {
 	c.formats = formats
 }

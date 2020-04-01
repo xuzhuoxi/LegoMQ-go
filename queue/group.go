@@ -281,7 +281,10 @@ func (g *queueGroup) InitQueueGroup(settings []QueueSetting) (queues []IMessageC
 		return nil, nil
 	}
 	for idx, _ := range settings {
-		queue, err := NewContextQueue(settings[idx])
+		queue, err := settings[idx].NewMessageQueue()
+		if nil != err {
+			return nil, err
+		}
 		err = group.Add(queue)
 		if nil != err {
 			return nil, err
