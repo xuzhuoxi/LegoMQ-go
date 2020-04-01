@@ -39,6 +39,7 @@ type IMessageProducer interface {
 // Socket服务消息生成者
 type ISockMessageProducer interface {
 	IMessageProducer
+	IProducerSettingSupport
 
 	// 初始化服务实例
 	InitSockServer(sockNetwork netx.SockNetwork) (s netx.ISockServer, err error)
@@ -56,6 +57,7 @@ type ISockMessageProducer interface {
 // Http服务消息生成者
 type IHttpMessageProducer interface {
 	IMessageProducer
+	IProducerSettingSupport
 
 	// 初始化服务实例
 	InitHttpServer() (s netx.IHttpServer, err error)
@@ -73,6 +75,7 @@ type IHttpMessageProducer interface {
 // RPC服务消息生成者
 type IRPCMessageProducer interface {
 	IMessageProducer
+	IProducerSettingSupport
 
 	// 初始化服务实例
 	InitRPCServer() (s netx.IRPCServer, err error)

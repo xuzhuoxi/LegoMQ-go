@@ -29,8 +29,9 @@ type IMessageConsumer interface {
 
 type ILogMessageConsumer interface {
 	IMessageConsumer
-
+	IConsumerSettingSupport
 	logx.ILoggerGetter
+
 	SetConsumerLevel(level logx.LogLevel)
 }
 

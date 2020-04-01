@@ -13,7 +13,7 @@ type IMessageContextHeader interface {
 	// 路由信息
 	RoutingKey() string
 	// 发送者信息
-	SenderHost() string
+	SenderAddr() string
 	// 生成时间戳
 	Timestamp() int64
 	// 生成序号
@@ -31,7 +31,7 @@ type IMessageContext interface {
 
 type MessageContextHeader struct {
 	routingKey string
-	senderHost string
+	senderAddr string
 	timestamp  int64
 	index      int
 
@@ -39,8 +39,8 @@ type MessageContextHeader struct {
 }
 
 func (h *MessageContextHeader) String() string {
-	return fmt.Sprintf("Header{RoutingKey=%s,SenderHost=%s,Timestamp=%d,Index=%d,Header=%s}",
-		h.routingKey, h.senderHost, h.timestamp, h.index, fmt.Sprint(h.header))
+	return fmt.Sprintf("Header{RoutingKey=%s,SenderAddr=%s,Timestamp=%d,Index=%d,Header=%s}",
+		h.routingKey, h.senderAddr, h.timestamp, h.index, fmt.Sprint(h.header))
 }
 
 func (h *MessageContextHeader) Header() interface{} {
@@ -59,16 +59,16 @@ func (r *MessageContextHeader) RoutingKey() string {
 	return r.routingKey
 }
 
-func (r *MessageContextHeader) SenderHost() string {
-	return r.senderHost
+func (r *MessageContextHeader) SenderAddr() string {
+	return r.senderAddr
 }
 
-func NewMessageContextHeader(routingKey string, senderHost string, header interface{}) MessageContextHeader {
+func NewMessageContextHeader(routingKey string, senderAddr string, header interface{}) MessageContextHeader {
 	mu.Lock()
 	defer func() {
 		index += 1
 		mu.Unlock()
 	}()
-	return MessageContextHeader{routingKey: routingKey, senderHost: senderHost,
+	return MessageContextHeader{routingKey: routingKey, senderAddr: senderAddr,
 		timestamp: time.Now().UnixNano(), index: index, header: header}
 }

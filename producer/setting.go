@@ -19,7 +19,7 @@ func (ps ProducerSetting) NewMessageProducer() (producer IMessageProducer, err e
 		return nil, err
 	}
 	p.SetId(ps.Id)
-	if sp, ok := p.(IProducerSetting); ok {
+	if sp, ok := p.(IProducerSettingSupport); ok {
 		sp.SetSetting(ps)
 		err = sp.InitProducer()
 		if nil != err {
@@ -38,7 +38,7 @@ type ProducerSettingRPC struct {
 	Addr string
 }
 
-type IProducerSetting interface {
+type IProducerSettingSupport interface {
 	// 设置配置数据
 	SetSetting(setting ProducerSetting)
 	// 读取配置数据

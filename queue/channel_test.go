@@ -72,3 +72,16 @@ func TestChannelCache_ReadWriteContextsTo(t *testing.T) {
 		fmt.Println("WriteContexts:", count, err)
 	}
 }
+
+// 从关闭的channel读取数据，会得到默认值
+func TestChannel(t *testing.T) {
+	c := make(chan struct{})
+	close(c)
+	count := 5
+	for count > 0 {
+		d := <-c
+		fmt.Println(d)
+		fmt.Println(d == struct{}{})
+		count--
+	}
+}

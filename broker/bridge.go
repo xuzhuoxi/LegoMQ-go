@@ -130,16 +130,16 @@ func (b *p2qBridge) Unlink() error {
 	return nil
 }
 
-func (b *p2qBridge) onProduced(msg message.IMessageContext, locateKey string) {
+func (b *p2qBridge) onProduced(msg message.IMessageContext, locateId string) {
 	if nil == msg {
 		return
 	}
-	tIds, err := b.routing.Route(msg.RoutingKey(), locateKey)
+	tIds, err := b.routing.Route(msg.RoutingKey(), locateId)
 	if nil != err {
 		return
 	}
 	b.qGroup.WriteMessageToMulti(msg, tIds)
-	//fmt.Println("onProduced:", msg, locateKey, tIds)
+	//fmt.Println("onProduced:", msg, locateId, tIds)
 	//_, _, err1, err2 := b.qGroup.WriteMessageToMulti(msg, tIds)
 	//if err1 != nil {
 	//	fmt.Println("err1:", err1)
@@ -149,12 +149,12 @@ func (b *p2qBridge) onProduced(msg message.IMessageContext, locateKey string) {
 	//}
 }
 
-func (b *p2qBridge) onMultiProduced(msgArr []message.IMessageContext, locateKey string) {
+func (b *p2qBridge) onMultiProduced(msgArr []message.IMessageContext, locateId string) {
 	if 0 == len(msgArr) {
 		return
 	}
 	for idx, _ := range msgArr {
-		tIds, err := b.routing.Route(msgArr[idx].RoutingKey(), locateKey)
+		tIds, err := b.routing.Route(msgArr[idx].RoutingKey(), locateId)
 		if nil != err {
 			return
 		}
@@ -262,28 +262,28 @@ func (b *q2cBridge) onTime(evt *eventx.EventData) {
 	b.qGroup.ForEachElement(func(index int, ele queue.IMessageContextQueue) (stop bool) {
 		//ctx, err := ele.ReadContext()
 		//if nil == err {
-		//	b.handleMessage(ctx, ele.LocateKey())
+		//	b.handleMessage(ctx, ele.LocateId())
 		//}
 		//return false
 		count, _ := ele.ReadContextsTo(b.msgCache[index])
 		if count > 0 {
-			b.handleMessages(b.msgCache[index][:count], ele.LocateKey())
+			b.handleMessages(b.msgCache[index][:count], ele.LocateId())
 		}
 		return false
 	})
 }
 
-func (b *q2cBridge) handleMessage(msg message.IMessageContext, locateKey string) {
-	ids, err := b.routing.Route(msg.RoutingKey(), locateKey)
+func (b *q2cBridge) handleMessage(msg message.IMessageContext, locateId string) {
+	ids, err := b.routing.Route(msg.RoutingKey(), locateId)
 	if nil != err {
 		return
 	}
 	b.cGroup.ConsumeMessageMulti(msg, ids)
 }
 
-func (b *q2cBridge) handleMessages(msgs []message.IMessageContext, locateKey string) {
+func (b *q2cBridge) handleMessages(msgs []message.IMessageContext, locateId string) {
 	for index, _ := range msgs {
-		ids, err := b.routing.Route(msgs[index].RoutingKey(), locateKey)
+		ids, err := b.routing.Route(msgs[index].RoutingKey(), locateId)
 		if nil != err {
 			continue
 		}
