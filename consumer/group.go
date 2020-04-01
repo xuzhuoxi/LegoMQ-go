@@ -244,7 +244,10 @@ func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) (consumers
 		return nil, nil
 	}
 	for idx, _ := range settings {
-		consumer, err := NewMessageConsumer(settings[idx])
+		consumer, err := settings[idx].NewMessageConsumer()
+		if nil != err {
+			return nil, err
+		}
 		err = group.Add(consumer)
 		if nil != err {
 			return nil, err

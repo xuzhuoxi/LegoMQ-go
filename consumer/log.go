@@ -1,13 +1,15 @@
 package consumer
 
 import (
+	"errors"
 	"fmt"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/logx"
 )
 
 func NewLogConsumer() ILogMessageConsumer {
-	return newLogConsumer().(ILogMessageConsumer)
+	return &logConsumer{}
 }
 
 func NewConsoleLogConsumer() ILogMessageConsumer {
@@ -18,32 +20,38 @@ func NewConsoleLogConsumer() ILogMessageConsumer {
 }
 
 func newLogConsumer() IMessageConsumer {
-	rs := &logConsumer{logger: logx.NewLogger()}
-	return rs
+	return &logConsumer{}
 }
 
 type logConsumer struct {
-	id      string
-	formats []string
+	support.ElementSupport
+	ConsumerSettingSupport
 
 	logger logx.ILogger
 	level  logx.LogLevel
 }
 
-func (c *logConsumer) Id() string {
-	return c.id
+func (c *logConsumer) InitConsumer() error {
+	if "" == c.setting.Id {
+		return errors.New("Id is empty. ")
+	}
+	c.SetId(c.setting.Id)
+	c.SetFormats(c.setting.Formats)
+
+	c.level = c.setting.Log.Level
+	c.logger = logx.NewLogger()
+	for _, config := range c.setting.Log.Config {
+		c.logger.SetConfig(config)
+	}
+	return nil
 }
 
-func (c *logConsumer) SetId(Id string) {
-	c.id = Id
+func (c *logConsumer) StartConsumer() error {
+	return nil
 }
 
-func (c *logConsumer) Formats() []string {
-	return c.formats
-}
-
-func (c *logConsumer) SetFormat(formats []string) {
-	c.formats = formats
+func (c *logConsumer) StopConsumer() error {
+	return nil
 }
 
 func (c *logConsumer) ConsumeMessage(msg message.IMessageContext) error {

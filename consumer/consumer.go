@@ -43,13 +43,6 @@ const (
 	CustomizeConsumer
 )
 
-type ConsumerSetting struct {
-	Id        string
-	Mode      ConsumerMode
-	LocateKey string
-	Formats   []string
-}
-
 // 函数映射表
 var newConsumerFuncArr = make([]func() IMessageConsumer, 16, 16)
 
@@ -63,14 +56,8 @@ func (m ConsumerMode) NewMessageConsumer() (c IMessageConsumer, err error) {
 }
 
 // 根据创建消费者实例
-func NewMessageConsumer(setting ConsumerSetting) (c IMessageConsumer, err error) {
-	q, err := setting.Mode.NewMessageConsumer()
-	if nil != err {
-		return nil, err
-	}
-	q.SetId(setting.Id)
-	q.SetFormat(setting.Formats)
-	return q, nil
+func NewMessageConsumer(mode ConsumerMode) (c IMessageConsumer, err error) {
+	return mode.NewMessageConsumer()
 }
 
 // 注册

@@ -1,11 +1,8 @@
 package producer
 
 import (
-	"errors"
 	"github.com/xuzhuoxi/infra-go/netx"
 )
-
-var ErrSettingNotSupport = errors.New("IProducerSetting not support. ")
 
 type ProducerSetting struct {
 	Id       string
@@ -21,12 +18,15 @@ func (ps ProducerSetting) NewMessageProducer() (producer IMessageProducer, err e
 	if nil != err {
 		return nil, err
 	}
+	p.SetId(ps.Id)
 	if sp, ok := p.(IProducerSetting); ok {
 		sp.SetSetting(ps)
-		sp.InitProducer()
-		return p, nil
+		err = sp.InitProducer()
+		if nil != err {
+			return nil, err
+		}
 	}
-	return nil, ErrSettingNotSupport
+	return p, nil
 }
 
 type ProducerSettingHttp struct {
@@ -39,11 +39,16 @@ type ProducerSettingRPC struct {
 }
 
 type IProducerSetting interface {
+	// 设置配置数据
 	SetSetting(setting ProducerSetting)
+	// 读取配置数据
 	Setting() ProducerSetting
 
+	// 根据配置数据初始化
 	InitProducer() error
+	// 启动
 	StartProducer() error
+	// 停止
 	StopProducer() error
 }
 

@@ -33,6 +33,7 @@ func (p *rpcMessageProducer) InitProducer() error {
 	}
 	p.SetId(p.setting.Id)
 	p.SetLocateId(p.setting.LocateId)
+	p.rpcServer = netx.NewRPCServer()
 	return nil
 }
 

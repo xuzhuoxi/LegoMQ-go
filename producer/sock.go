@@ -33,6 +33,11 @@ func (p *sockMessageProducer) InitProducer() error {
 	}
 	p.SetId(p.setting.Id)
 	p.SetLocateId(p.setting.LocateId)
+	s, err := p.setting.Sock.Network.NewServer()
+	if nil != err {
+		return err
+	}
+	p.sockServer = s
 	return nil
 }
 

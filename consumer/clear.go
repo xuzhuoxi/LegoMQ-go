@@ -29,7 +29,7 @@ func (c *clearConsumer) Formats() []string {
 	return nil
 }
 
-func (c *clearConsumer) SetFormat(formats []string) {
+func (c *clearConsumer) SetFormats(formats []string) {
 	return
 }
 

@@ -109,14 +109,8 @@ func (m ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
 }
 
 // 根据创建生产者实例
-func NewMessageProducer(id string, mode ProducerMode, locateId string) (c IMessageProducer, err error) {
-	p, err := mode.NewMessageProducer()
-	if nil != err {
-		return nil, err
-	}
-	p.SetId(id)
-	p.SetLocateId(locateId)
-	return p, nil
+func NewMessageProducer(mode ProducerMode) (c IMessageProducer, err error) {
+	return mode.NewMessageProducer()
 }
 
 // 注册

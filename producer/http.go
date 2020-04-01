@@ -34,6 +34,7 @@ func (p *httpMessageProducer) InitProducer() error {
 	}
 	p.SetId(p.setting.Id)
 	p.SetLocateId(p.setting.LocateId)
+	p.httpServer = netx.NewHttpServer()
 	return nil
 }
 

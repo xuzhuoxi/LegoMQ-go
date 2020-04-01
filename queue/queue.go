@@ -96,15 +96,8 @@ func (m QueueMode) NewContextQueue(maxSize int) (c IMessageContextQueue, err err
 }
 
 // 根据创建队列实例
-func NewContextQueue(id string, mode QueueMode, queueSize int, locateId string, formats []string) (q IMessageContextQueue, err error) {
-	q, err = mode.NewContextQueue(queueSize)
-	if nil != err {
-		return nil, err
-	}
-	q.SetId(id)
-	q.SetLocateId(locateId)
-	q.SetFormats(formats)
-	return
+func NewContextQueue(mode QueueMode, maxSize int) (q IMessageContextQueue, err error) {
+	return mode.NewContextQueue(maxSize)
 }
 
 // 注册

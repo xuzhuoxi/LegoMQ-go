@@ -7,20 +7,19 @@ import (
 )
 
 var settings = []ConsumerSetting{
-	ConsumerSetting{Id: "1", Mode: ClearConsumer},
-	ConsumerSetting{Id: "2", Mode: PrintConsumer},
-	ConsumerSetting{Id: "3", Mode: LogConsumer}}
+	{Id: "1", Mode: ClearConsumer},
+	{Id: "2", Mode: PrintConsumer},
+	{Id: "3", Mode: LogConsumer, Log: ConsumerSettingLog{Level: logx.LevelTrace,
+		Config: []logx.LogConfig{{Type: logx.TypeConsole, Level: logx.LevelAll}}}}}
 
 func TestConsumerGroup(t *testing.T) {
-	config, group := NewMessageConsumerGroup()
-	config.InitConsumerGroup(settings)
+	var err error
 
-	logConsumer, err := group.GetConsumer("3")
+	config, group := NewMessageConsumerGroup()
+	_, err = config.InitConsumerGroup(settings)
 	if nil != err {
-		t.Fatal(err)
+		fmt.Println(err)
 	}
-	logConsumer.(ILogMessageConsumer).SetConsumerLevel(logx.LevelInfo)
-	logConsumer.(ILogMessageConsumer).GetLogger().SetConfig(logx.LogConfig{Type: logx.TypeConsole, Level: logx.LevelAll})
 
 	err = group.ConsumeMessage(msgNil, "1")
 	if nil != err {

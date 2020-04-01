@@ -31,7 +31,7 @@ func (c *printConsumer) Formats() []string {
 	return c.formats
 }
 
-func (c *printConsumer) SetFormat(formats []string) {
+func (c *printConsumer) SetFormats(formats []string) {
 	c.formats = formats
 }
 
@@ -50,10 +50,6 @@ func (c *printConsumer) ConsumeMessages(msg []message.IMessageContext) (err erro
 		}
 	}
 	return
-}
-
-func (c *printConsumer) AcceptMessage(msg message.IMessageContext) error {
-	return c.funcHandleContext(msg)
 }
 
 func (c *printConsumer) funcHandleContext(msg message.IMessageContext) error {
