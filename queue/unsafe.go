@@ -11,7 +11,7 @@ func NewUnsafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {
 
 func newUnsafeArrayQueue(maxSize int) (c *unsafeCache, err error) {
 	if maxSize <= 0 {
-		return nil, ErrSize
+		return nil, ErrQueueSize
 	}
 	initialCap := 256
 	if maxSize*2 > 256 {

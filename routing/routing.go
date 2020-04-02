@@ -6,12 +6,12 @@ import (
 )
 
 var (
-	ErrRougingRegister = errors.New("RoutingMode Unregister! ")
+	ErrRougingRegister = errors.New("RoutingStrategy: RoutingMode Unregister! ")
 
-	ErrRoutingUnSupport    = errors.New("RoutingStrategy route failed! ")
-	ErrRoutingTargetNil    = errors.New("RoutingStrategy TargetIds is empty! ")
-	ErrRoutingTargetsEmpty = errors.New("RoutingStrategy TargetIds is empty! ")
-	ErrRoutingFail         = errors.New("RoutingStrategy route failed! ")
+	ErrRoutingUnSupport    = errors.New("RoutingStrategy: Routing is not supported! ")
+	ErrRoutingTargetNil    = errors.New("RoutingStrategy: Target is nil! ")
+	ErrRoutingTargetsEmpty = errors.New("RoutingStrategy: Targets is empty! ")
+	ErrRoutingFail         = errors.New("RoutingStrategy: Route fail! ")
 )
 
 // 消息路由策略

@@ -7,16 +7,19 @@ import (
 )
 
 var (
-	ErrQueueClosed = errors.New("ContextQueue is closed! ")
-	ErrQueueFull   = errors.New("ContextQueue is Full! ")
-	ErrQueueEmpty  = errors.New("ContextQueue is Empty! ")
+	ErrQueueSize           = errors.New("ContextQueue: size < 1. ")
+	ErrQueueModeUnregister = errors.New("ContextQueue: QueueMode Unregister! ")
 )
 
 var (
-	ErrQueueMessageNil     = errors.New("ContextQueue: Message is nil! ")
-	ErrQueueMessagesEmpty  = errors.New("ContextQueue: Count is <= 0! ")
-	ErrSize                = errors.New("ContextQueue: Max size should be larger than 0. ")
-	ErrQueueModeUnregister = errors.New("QueueMode Unregister! ")
+	ErrQueueClosed = errors.New("ContextQueue: Queue is closed! ")
+	ErrQueueFull   = errors.New("ContextQueue: Queue is Full! ")
+	ErrQueueEmpty  = errors.New("ContextQueue: Queue is Empty! ")
+)
+
+var (
+	ErrQueueMessageNil    = errors.New("ContextQueue: Message is nil! ")
+	ErrQueueMessagesEmpty = errors.New("ContextQueue: Count is <= 0! ")
 )
 
 type IMessageContextQueueReader interface {

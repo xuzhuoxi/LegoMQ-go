@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	ErrProducerNil        = errors.New("MessageProducer: Producer is nil. ")
 	ErrProducerIdExists   = errors.New("MessageProducer: ProducerId exists. ")
 	ErrProducerIdUnknown  = errors.New("MessageProducer: ProducerId unknown. ")
 	ErrProducerIndexRange = errors.New("MessageProducer: Index out of range. ")

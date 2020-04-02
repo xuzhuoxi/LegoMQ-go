@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	ErrConsumerNil        = errors.New("MessageConsumer: Consumer is nil. ")
 	ErrConsumerIdExists   = errors.New("MessageConsumer: ConsumerId exists. ")
 	ErrConsumerIdUnknown  = errors.New("MessageConsumer: ConsumerId unknown. ")
 	ErrConsumerIndexRange = errors.New("MessageConsumer: Index out of range. ")

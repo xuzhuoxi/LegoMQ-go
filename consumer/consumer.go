@@ -9,7 +9,7 @@ import (
 
 var (
 	ErrConsumerMessageNil     = errors.New("MessageConsumer: Message is nil. ")
-	ErrConsumerMessagesEmpty  = errors.New("MessageConsumer: Message array is empty. ")
+	ErrConsumerMessagesEmpty  = errors.New("MessageConsumer: Messages is empty. ")
 	ErrConsumerModeUnregister = errors.New("MessageConsumer: ConsumerMode Unregister. ")
 )
 

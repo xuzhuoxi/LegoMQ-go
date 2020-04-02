@@ -16,7 +16,7 @@ const (
 
 var (
 	ErrProducerMessageNil     = errors.New("MessageProducer: Message is nil! ")
-	ErrProducerMessagesEmpty  = errors.New("MessageProducer: Message array is empty! ")
+	ErrProducerMessagesEmpty  = errors.New("MessageProducer: Messages is empty! ")
 	ErrProducerModeUnregister = errors.New("MessageProducer: ProducerMode Unregister! ")
 )
 

@@ -12,7 +12,6 @@ import (
 var (
 	ErrQueueIdUnknown  = errors.New("MessageQueueGroup: QueueId Unknown. ")
 	ErrQueueIdExists   = errors.New("MessageQueueGroup: QueueId Exists. ")
-	ErrQueueNil        = errors.New("MessageQueueGroup: Queue is nil. ")
 	ErrQueueIndexRange = errors.New("MessageQueueGroup: Index out of range. ")
 )
 

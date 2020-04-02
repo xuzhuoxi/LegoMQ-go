@@ -7,8 +7,8 @@ import (
 )
 
 func NewChannelBlockingQueue(maxSize int) (c IMessageContextQueue, err error) {
-	if maxSize <= 0 {
-		return nil, ErrSize
+	if maxSize < 1 {
+		return nil, ErrQueueSize
 	}
 	return &channelBlockingCache{channel: make(chan message.IMessageContext, maxSize)}, nil
 }
