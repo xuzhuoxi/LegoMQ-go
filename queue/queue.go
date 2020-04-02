@@ -14,7 +14,7 @@ var (
 
 var (
 	ErrQueueMessageNil     = errors.New("ContextQueue: Message is nil! ")
-	ErrQueueCountZero      = errors.New("ContextQueue: Count is <= 0! ")
+	ErrQueueMessagesEmpty  = errors.New("ContextQueue: Count is <= 0! ")
 	ErrSize                = errors.New("ContextQueue: Max size should be larger than 0. ")
 	ErrQueueModeUnregister = errors.New("QueueMode Unregister! ")
 )
@@ -28,14 +28,14 @@ type IMessageContextQueueReader interface {
 	// 向缓存区读出多个消息
 	// ctx: 返回实际读出的消息
 	// err: 读取异常
-	//		count数量异常：ErrQueueCountZero
+	//		count数量异常：ErrQueueMessagesEmpty
 	//		队列关闭：ErrQueueClosed
 	//		队列空：ErrQueueEmpty
 	ReadContexts(count int) (ctx []message.IMessageContext, err error)
 	// 向缓存区读出多个消息
 	// count: 返回实际读出的消息数量
 	// err: 读取异常
-	//		ctx数量异常：ErrQueueCountZero
+	//		ctx数量异常：ErrQueueMessagesEmpty
 	//		队列关闭：ErrQueueClosed
 	//		队列空：ErrQueueEmpty
 	ReadContextsTo(ctx []message.IMessageContext) (count int, err error)
@@ -51,7 +51,7 @@ type IMessageContextQueueWriter interface {
 	// count: 返回实际写入数量
 	// err: 写入异常
 	//		ctx包含nil：ErrQueueMessageNil
-	//		ctx数量异常：ErrQueueCountZero
+	//		ctx数量异常：ErrQueueMessagesEmpty
 	//		队列满：ErrQueueFull
 	WriteContexts(ctx []message.IMessageContext) (count int, err error)
 }
@@ -73,8 +73,10 @@ type IMessageContextQueue interface {
 type QueueMode int
 
 const (
-	// 使用channel实现的队列
-	ChannelQueue QueueMode = iota + 1
+	// 使用channel实现的阻塞队列
+	ChannelBlockingQueue QueueMode = iota + 1
+	// 使用channel实现的非阻塞队列
+	ChannelNBlockingQueue
 	// 使用数组实现的队列
 	ArrayQueueUnsafe
 	// 使用数组实现的队列(并发安全)
@@ -106,7 +108,8 @@ func RegisterQueueMode(m QueueMode, f func(maxSize int) (c IMessageContextQueue,
 }
 
 func init() {
-	RegisterQueueMode(ChannelQueue, NewChannelQueue)
+	RegisterQueueMode(ChannelBlockingQueue, NewChannelBlockingQueue)
+	RegisterQueueMode(ChannelNBlockingQueue, NewChannelNonBlockingQueue)
 	RegisterQueueMode(ArrayQueueUnsafe, NewUnsafeArrayQueue)
 	RegisterQueueMode(ArrayQueueSafe, NewSafeArrayQueue)
 }

@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"testing"
-	"time"
 )
 
-func TestChannelCache_ReadWriteContext(t *testing.T) {
-	c, _ := NewChannelQueue(20)
+func TestChannelNBlockingCache_ReadWriteContext(t *testing.T) {
+	c, _ := NewChannelNonBlockingQueue(20)
 
 	go func() {
 		var err error
@@ -25,12 +24,11 @@ func TestChannelCache_ReadWriteContext(t *testing.T) {
 		ctx = message.NewMessageContext("111", "ddd", nil, "New")
 		err = c.WriteContext(ctx)
 		fmt.Println("WriteContext:", err, ctxDefault, ctx)
-		time.Sleep(time.Second * 2)
 	}
 }
 
-func TestChannelCache_ReadWriteContexts(t *testing.T) {
-	c, _ := NewChannelQueue(20)
+func TestChannelNBlockingCache_ReadWriteContexts(t *testing.T) {
+	c, _ := NewChannelNonBlockingQueue(20)
 
 	go func() {
 		var err error
@@ -47,41 +45,29 @@ func TestChannelCache_ReadWriteContexts(t *testing.T) {
 	for {
 		count, err = c.WriteContexts(ctxArr)
 		fmt.Println("WriteContexts:", count, err)
-		time.Sleep(time.Second)
 	}
 }
 
-func TestChannelCache_ReadWriteContextsTo(t *testing.T) {
-	c, _ := NewChannelQueue(200)
+func TestChannelNBlockingCache_ReadWriteContextsTo(t *testing.T) {
+	c, _ := NewChannelNonBlockingQueue(2000)
 	cache := make([]message.IMessageContext, 10, 10)
 	go func() {
 		var err error
 		var count int
 		for {
 			count, err = c.ReadContextsTo(cache)
-			if count > 0 {
-				fmt.Println("ReadContext:", count, cache[:count:count], err)
+			if count > 0 || nil != err {
+				fmt.Println("ReadContext:", count, cache[:count])
 			}
-			time.Sleep(time.Second * 2)
+			//time.Sleep(time.Second)
 		}
 	}()
 	var err error
 	var count int
 	for {
 		count, err = c.WriteContexts(ctxArr)
-		fmt.Println("WriteContexts:", count, err)
-	}
-}
-
-// 从关闭的channel读取数据，会得到默认值
-func TestChannel(t *testing.T) {
-	c := make(chan struct{})
-	close(c)
-	count := 5
-	for count > 0 {
-		d := <-c
-		fmt.Println(d)
-		fmt.Println(d == struct{}{})
-		count--
+		if count > 0 || nil != err {
+			fmt.Println("WriteContexts:", count, err)
+		}
 	}
 }

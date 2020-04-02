@@ -30,8 +30,8 @@ var (
 				Http: producer.ProducerSettingHttp{Addr: ":10000", Network: netx.TcpNetwork}},
 		},
 		Queues: []queue.QueueSetting{
-			{Id: "Q01", Mode: queue.ChannelQueue, Size: 256, LocateId: "Queue01", Formats: []string{"Http0"}},
-			//{Id: "Q01_Backup", Mode: queue.ChannelQueue, Size: 256, Formats: []string{"Log02"}},
+			{Id: "Q01", Mode: queue.ChannelBlockingQueue, Size: 256, LocateId: "Queue01", Formats: []string{"Http0"}},
+			//{Id: "Q01_Backup", Mode: queue.ChannelBlockingQueue, Size: 256, Formats: []string{"Log02"}},
 		},
 		Consumers: []consumer.ConsumerSetting{
 			{Id: "C01", Mode: consumer.LogConsumer, Formats: []string{"Queue01"},

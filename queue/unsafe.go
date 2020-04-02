@@ -50,7 +50,7 @@ func (c *unsafeCache) WriteContext(ctx message.IMessageContext) error {
 func (c *unsafeCache) WriteContexts(ctx []message.IMessageContext) (count int, err error) {
 	ctxLen := len(ctx)
 	if 0 == ctxLen {
-		return 0, ErrQueueCountZero
+		return 0, ErrQueueMessagesEmpty
 	}
 	for idx, _ := range ctx {
 		if len(c.arr) == c.max {
@@ -77,7 +77,7 @@ func (c *unsafeCache) ReadContext() (ctx message.IMessageContext, err error) {
 
 func (c *unsafeCache) ReadContexts(count int) (ctx []message.IMessageContext, err error) {
 	if count <= 0 {
-		return nil, ErrQueueCountZero
+		return nil, ErrQueueMessagesEmpty
 	}
 	cLen := len(c.arr)
 	if cLen == 0 {
@@ -95,7 +95,7 @@ func (c *unsafeCache) ReadContexts(count int) (ctx []message.IMessageContext, er
 func (c *unsafeCache) ReadContextsTo(ctx []message.IMessageContext) (count int, err error) {
 	ctxLen := len(ctx)
 	if 0 == ctxLen {
-		return 0, ErrQueueCountZero
+		return 0, ErrQueueMessagesEmpty
 	}
 	cLen := len(c.arr)
 	if cLen < ctxLen {

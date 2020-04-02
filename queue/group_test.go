@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	channelQueue, _ = NewChannelQueue(20)
+	channelQueue, _ = NewChannelBlockingQueue(20)
 	safeQueue, _    = NewSafeArrayQueue(20)
 	ids             = []string{"C01", "S01"}
 )
