@@ -4,13 +4,14 @@ import (
 	"github.com/xuzhuoxi/infra-go/netx"
 )
 
+// 消息生产者设置
 type ProducerSetting struct {
-	Id       string
-	Mode     ProducerMode
-	LocateId string
-	Http     ProducerSettingHttp
-	RPC      ProducerSettingRPC
-	Sock     netx.SockParams
+	Id       string              // 标识
+	Mode     ProducerMode        // 消息生产者模式
+	LocateId string              // 位置信息
+	Http     ProducerSettingHttp // Http消息接收服务器设置
+	RPC      ProducerSettingRPC  // RPC消息接收服务器设置
+	Sock     netx.SockParams     // Socket消息接收服务器设置
 }
 
 func (ps ProducerSetting) NewMessageProducer() (producer IMessageProducer, err error) {
@@ -29,15 +30,20 @@ func (ps ProducerSetting) NewMessageProducer() (producer IMessageProducer, err e
 	return p, nil
 }
 
+// 消息生产者设置
+// Http消息接收服务器
 type ProducerSettingHttp struct {
 	Addr    string
 	Network netx.SockNetwork
 }
 
+// 消息生产者设置
+// RPC消息接收服务器
 type ProducerSettingRPC struct {
 	Addr string
 }
 
+// 消息生产者设置支持接口
 type IProducerSettingSupport interface {
 	// 设置配置数据
 	SetSetting(setting ProducerSetting)

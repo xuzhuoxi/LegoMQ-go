@@ -13,8 +13,11 @@ var (
 	ErrConsumerModeUnregister = errors.New("MessageConsumer: ConsumerMode Unregister. ")
 )
 
+// 消息消费者接口
 type IMessageConsumer interface {
-	support.IConsumerBase
+	support.IIdSupport      // 标识支持
+	support.IFormatsSupport // 格式匹配支持
+
 	// 消费一条消息
 	// err:
 	//		msg为nil时ErrConsumerMessageNil
@@ -27,14 +30,17 @@ type IMessageConsumer interface {
 	ConsumeMessages(msg []message.IMessageContext) error
 }
 
+// 日志消息消费者接口
 type ILogMessageConsumer interface {
-	IMessageConsumer
-	IConsumerSettingSupport
-	logx.ILoggerGetter
+	IMessageConsumer        // 消息消费者
+	IConsumerSettingSupport // 消息消费者设置支持
+	logx.ILoggerGetter      // 日志获取
 
+	// 设置默认日志等级
 	SetConsumerLevel(level logx.LogLevel)
 }
 
+// 消息消费者模式
 type ConsumerMode int
 
 const (
@@ -48,6 +54,8 @@ const (
 var newConsumerFuncArr = make([]func() IMessageConsumer, 16, 16)
 
 // 创建消费者实例
+// err:
+//		ErrConsumerModeUnregister: 实例化功能未注册
 func (m ConsumerMode) NewMessageConsumer() (c IMessageConsumer, err error) {
 	if v := newConsumerFuncArr[m]; nil != v {
 		return v(), nil

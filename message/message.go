@@ -9,6 +9,7 @@ import (
 var index = 0
 var mu sync.Mutex
 
+// 消息头接口
 type IMessageContextHeader interface {
 	// 路由信息
 	RoutingKey() string
@@ -24,6 +25,7 @@ type IMessageContextHeader interface {
 
 // 消息上下文
 type IMessageContext interface {
+	// 消息头
 	IMessageContextHeader
 	// 消息体
 	Body() interface{}

@@ -20,10 +20,42 @@ var (
 	ErrProducerModeUnregister = errors.New("MessageProducer: ProducerMode Unregister! ")
 )
 
-// 消息生产者
+// 函数映射表
+var newProducerFuncArr = make([]func() IMessageProducer, 16, 16)
+
+// 消息生产者模式
+type ProducerMode int
+
+// 创建消息生产者实例
+// err:
+// 		ErrProducerModeUnregister:	实例化功能未注册
+func (m ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
+	if v := newProducerFuncArr[m]; nil != v {
+		return v(), nil
+	} else {
+		return nil, ErrProducerModeUnregister
+	}
+}
+
+const (
+	HttpProducer ProducerMode = iota + 1
+	SockProducer
+	RPCProducer
+	CustomizeProducer
+)
+
+// 根据创建消息生产者实例
+// mode:	生产者模式
+func NewMessageProducer(mode ProducerMode) (c IMessageProducer, err error) {
+	return mode.NewMessageProducer()
+}
+
+// 消息生产者接口
 type IMessageProducer interface {
-	eventx.IEventDispatcher
-	support.IProducerBase
+	eventx.IEventDispatcher // 事件支持
+	support.IIdSupport      // 标识支持
+	support.ILocateSupport  // 位置支持
+
 	// 生产消息
 	// 抛出事件 EventMessageOnProducer
 	// err:
@@ -38,8 +70,8 @@ type IMessageProducer interface {
 
 // Socket服务消息生成者
 type ISockMessageProducer interface {
-	IMessageProducer
-	IProducerSettingSupport
+	IMessageProducer        // 消息生产者
+	IProducerSettingSupport //消息生产者设置支持
 
 	// 初始化服务实例
 	InitSockServer(sockNetwork netx.SockNetwork) (s netx.ISockServer, err error)
@@ -56,8 +88,8 @@ type ISockMessageProducer interface {
 
 // Http服务消息生成者
 type IHttpMessageProducer interface {
-	IMessageProducer
-	IProducerSettingSupport
+	IMessageProducer        // 消息生产者
+	IProducerSettingSupport // 消息生产者设置支持
 
 	// 初始化服务实例
 	InitHttpServer() (s netx.IHttpServer, err error)
@@ -74,8 +106,8 @@ type IHttpMessageProducer interface {
 
 // RPC服务消息生成者
 type IRPCMessageProducer interface {
-	IMessageProducer
-	IProducerSettingSupport
+	IMessageProducer        // 消息生产者
+	IProducerSettingSupport // 消息生产者设置支持
 
 	// 初始化服务实例
 	InitRPCServer() (s netx.IRPCServer, err error)
@@ -88,32 +120,6 @@ type IRPCMessageProducer interface {
 	StartRPCListener(addr string) error
 	// 停止RPC服务器
 	StopRPCListener() error
-}
-
-type ProducerMode int
-
-const (
-	HttpProducer ProducerMode = iota + 1
-	SockProducer
-	RPCProducer
-	CustomizeProducer
-)
-
-// 函数映射表
-var newProducerFuncArr = make([]func() IMessageProducer, 16, 16)
-
-// 创建生产者实例
-func (m ProducerMode) NewMessageProducer() (p IMessageProducer, err error) {
-	if v := newProducerFuncArr[m]; nil != v {
-		return v(), nil
-	} else {
-		return nil, ErrProducerModeUnregister
-	}
-}
-
-// 根据创建生产者实例
-func NewMessageProducer(mode ProducerMode) (c IMessageProducer, err error) {
-	return mode.NewMessageProducer()
 }
 
 // 注册

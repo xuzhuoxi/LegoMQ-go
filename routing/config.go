@@ -1,7 +1,6 @@
 package routing
 
 import (
-	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"sync"
 )
 
@@ -14,7 +13,7 @@ type RoutingSetting struct {
 //----------------------
 
 type StrategyConfig struct {
-	Targets []support.IRoutingTarget
+	Targets []IRoutingTarget
 	Mu      sync.RWMutex
 }
 
@@ -24,7 +23,7 @@ func (s *StrategyConfig) TargetSize() int {
 	return len(s.Targets)
 }
 
-func (s *StrategyConfig) AppendRoutingTarget(target support.IRoutingTarget) error {
+func (s *StrategyConfig) AppendRoutingTarget(target IRoutingTarget) error {
 	if nil == target {
 		return ErrRoutingTargetNil
 	}
@@ -34,7 +33,7 @@ func (s *StrategyConfig) AppendRoutingTarget(target support.IRoutingTarget) erro
 	return nil
 }
 
-func (s *StrategyConfig) AppendRoutingTargets(targets []support.IRoutingTarget) error {
+func (s *StrategyConfig) AppendRoutingTargets(targets []IRoutingTarget) error {
 	if len(targets) == 0 {
 		return ErrRoutingTargetsEmpty
 	}
@@ -49,7 +48,7 @@ func (s *StrategyConfig) AppendRoutingTargets(targets []support.IRoutingTarget) 
 	return nil
 }
 
-func (s *StrategyConfig) SetRoutingTargets(targets []support.IRoutingTarget) error {
+func (s *StrategyConfig) SetRoutingTargets(targets []IRoutingTarget) error {
 	if len(targets) == 0 {
 		return ErrRoutingTargetsEmpty
 	}

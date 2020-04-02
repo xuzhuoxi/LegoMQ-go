@@ -1,14 +1,18 @@
 package queue
 
+// 消息队列设置
 type QueueSetting struct {
-	Id   string
-	Mode QueueMode
-	Size int
+	Id   string    // 标识
+	Mode QueueMode // 消息队列模式
+	Size int       // 队列容量
 
-	LocateId string
-	Formats  []string
+	LocateId string   // 位置信息
+	Formats  []string // 格式匹配信息
 }
 
+// 创建消息队列
+// err:
+//		ErrQueueModeUnregister: 实例化功能未注册
 func (qs QueueSetting) NewMessageQueue() (q IMessageContextQueue, err error) {
 	q, err = qs.Mode.NewContextQueue(qs.Size)
 	if nil != err {

@@ -17,6 +17,9 @@ func (s *wordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// 单词命中路由(大小写无关)
+// 空字符串忽略
+// routingKey和locateId只要命中其中一个，则判定为命中
 func (s *wordsStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()
@@ -72,6 +75,9 @@ func (s *caseWordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// 单词命中路由(大小写相关)
+// 空字符串忽略
+// routingKey和locateId只要命中其中一个，则判定为命中
 func (s *caseWordsStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
 	defer s.Mu.RUnlock()

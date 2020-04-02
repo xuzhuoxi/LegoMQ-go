@@ -18,17 +18,19 @@ var (
 type FuncOnMessageProduced func(msg message.IMessageContext, locateId string)
 type FuncOnMessagesProduced func(msg []message.IMessageContext, locateId string)
 
+// 消息生产者组
+// 配置接口
 type IMessageProducerGroupConfig interface {
 	// 生产者数量
 	ProducerSize() int
 	// 生产者标识信息
 	ProducerIds() []string
 
-	// 创建一个生产者，id使用默认规则创建
+	// 创建一个生产者并加入组，id使用默认规则创建
 	// err:
 	// 		ErrProducerModeUnregister:	ProducerMode未注册
 	CreateProducer(mode ProducerMode) (producer IMessageProducer, err error)
-	// 创建一个生产者，id使用默认规则创建
+	// 创建多个生产者并加入组，id使用默认规则创建
 	// err:
 	// 		ErrProducerModeUnregister:	ProducerMode未注册
 	CreateProducers(modes []ProducerMode) (producers []IMessageProducer, err []error)
@@ -71,6 +73,8 @@ type IMessageProducerGroupConfig interface {
 	SetProducedFunc(f FuncOnMessageProduced, fs FuncOnMessagesProduced)
 }
 
+// 消息生产者组
+// 操作接口
 type IMessageProducerGroup interface {
 	// 配置入口
 	Config() IMessageProducerGroupConfig
@@ -96,6 +100,9 @@ type IMessageProducerGroup interface {
 	NotifyMessagesProduced(msg []message.IMessageContext, producerId string) error
 }
 
+// 实例化消息生产组
+// config: 	配置接口
+// group: 	操作接口
 func NewMessageProducerGroup() (config IMessageProducerGroupConfig, group IMessageProducerGroup) {
 	rs := &producerGroup{}
 	rs.group = *collectionx.NewOrderHashGroup()

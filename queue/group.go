@@ -3,7 +3,7 @@ package queue
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/LegoMQ-go/support"
+	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -22,11 +22,11 @@ type IMessageQueueGroupConfig interface {
 	QueueSize() int
 	// 队列标识信息
 	QueueIds() []string
-	// 创建一个队列，id使用默认规则创建
+	// 创建一个队列并加入到组，id使用默认规则创建
 	// err:
 	// 		ErrQueueModeUnregister:	QueueMode未注册
 	CreateQueue(mode QueueMode, size int) (queue IMessageContextQueue, err error)
-	// 创建一个队列，id使用默认规则创建
+	// 创建多个队列并加入到组，id使用默认规则创建
 	// err:
 	// 		ErrQueueModeUnregister:	QueueMode未注册
 	CreateQueues(modes []QueueMode, size int) (queues []IMessageContextQueue, err []error)
@@ -64,8 +64,8 @@ type IMessageQueueGroupConfig interface {
 	UpdateQueues(queues []IMessageContextQueue) (err []error)
 	// 使用配置初始化队列组，覆盖旧配置
 	InitQueueGroup(settings []QueueSetting) (queues []IMessageContextQueue, err error)
-	// 路由信息
-	RoutingElements() []support.IRoutingTarget
+	// 路由集合信息
+	RoutingElements() []routing.IRoutingTarget
 }
 
 // 消息队列组
@@ -118,9 +118,11 @@ type IMessageQueueGroupWriter interface {
 	WriteMessagesToMulti(msg []message.IMessageContext, queueIdArr []string) (err1 error, err2 error)
 }
 
+// 消息队列组
+// 操作接口
 type IMessageQueueGroup interface {
-	IMessageQueueGroupReader
-	IMessageQueueGroupWriter
+	IMessageQueueGroupReader // 读操作
+	IMessageQueueGroupWriter // 写操作
 	// 取生成者
 	// err:
 	// 		ErrQueueIdUnknown:	QueueId不存在
@@ -135,6 +137,9 @@ type IMessageQueueGroup interface {
 	ForEachElement(f func(index int, ele IMessageContextQueue) (stop bool))
 }
 
+// 实例化消息队列组
+// config: 	配置接口
+// group: 	操作接口
 func NewMessageQueueGroup() (config IMessageQueueGroupConfig, group IMessageQueueGroup) {
 	rs := &queueGroup{}
 	rs.group = *collectionx.NewOrderHashGroup()
@@ -294,12 +299,12 @@ func (g *queueGroup) InitQueueGroup(settings []QueueSetting) (queues []IMessageC
 	return queues, nil
 }
 
-func (g *queueGroup) RoutingElements() []support.IRoutingTarget {
+func (g *queueGroup) RoutingElements() []routing.IRoutingTarget {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	rs := make([]support.IRoutingTarget, 0, g.QueueSize())
+	rs := make([]routing.IRoutingTarget, 0, g.QueueSize())
 	g.group.ForEachElement(func(_ int, ele collectionx.IOrderHashElement) (stop bool) {
-		rs = append(rs, ele.(support.IRoutingTarget))
+		rs = append(rs, ele.(routing.IRoutingTarget))
 		return false
 	})
 	return rs

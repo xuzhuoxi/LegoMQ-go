@@ -4,20 +4,24 @@ import (
 	"github.com/xuzhuoxi/infra-go/logx"
 )
 
+// 消息消费者设置
 type ConsumerSetting struct {
-	Id   string
-	Mode ConsumerMode
-
-	Formats []string
+	Id      string       // 标识
+	Mode    ConsumerMode // 消息生产者模式
+	Formats []string     // 格式匹配信息ss
 
 	Log ConsumerSettingLog
 }
 
+// 日志消息消费者设置
 type ConsumerSettingLog struct {
-	Level  logx.LogLevel
-	Config []logx.LogConfig
+	Level  logx.LogLevel    // 默认日志等级
+	Config []logx.LogConfig // 日志配置
 }
 
+// 创建日志消息消费者实例
+// err:
+//		ErrConsumerModeUnregister: 实例化功能未注册
 func (cs ConsumerSetting) NewMessageConsumer() (consumer IMessageConsumer, err error) {
 	p, err := cs.Mode.NewMessageConsumer()
 	if nil != err {
@@ -34,6 +38,7 @@ func (cs ConsumerSetting) NewMessageConsumer() (consumer IMessageConsumer, err e
 	return p, nil
 }
 
+// 消息消费者设置支持接口
 type IConsumerSettingSupport interface {
 	// 设置配置数据
 	SetSetting(setting ConsumerSetting)

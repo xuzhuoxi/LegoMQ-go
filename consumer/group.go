@@ -3,7 +3,7 @@ package consumer
 import (
 	"errors"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/LegoMQ-go/support"
+	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 	"strconv"
 	"sync"
@@ -15,6 +15,8 @@ var (
 	ErrConsumerIndexRange = errors.New("MessageConsumer: Index out of range. ")
 )
 
+// 消息消费者组
+// 配置接口
 type IMessageConsumerGroupConfig interface {
 	// 消费者数量
 	ConsumerSize() int
@@ -63,9 +65,11 @@ type IMessageConsumerGroupConfig interface {
 	// 使用配置初始化消费者组，覆盖旧配置
 	InitConsumerGroup(settings []ConsumerSetting) (consumers []IMessageConsumer, err error)
 	// 路由元素
-	RoutingElements() []support.IRoutingTarget
+	RoutingElements() []routing.IRoutingTarget
 }
 
+// 消息消费者组
+// 操作接口
 type IMessageConsumerGroup interface {
 	// 配置入口
 	Config() IMessageConsumerGroupConfig
@@ -97,6 +101,9 @@ type IMessageConsumerGroup interface {
 	ForEachElement(f func(index int, ele IMessageConsumer) (stop bool))
 }
 
+// 实例化消息消费者组
+// config: 	配置接口
+// group: 	操作接口
 func NewMessageConsumerGroup() (config IMessageConsumerGroupConfig, group IMessageConsumerGroup) {
 	rs := &consumerGroup{}
 	rs.group = *collectionx.NewOrderHashGroup()
@@ -257,12 +264,12 @@ func (g *consumerGroup) InitConsumerGroup(settings []ConsumerSetting) (consumers
 	return consumers, nil
 }
 
-func (g *consumerGroup) RoutingElements() []support.IRoutingTarget {
+func (g *consumerGroup) RoutingElements() []routing.IRoutingTarget {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	rs := make([]support.IRoutingTarget, 0, g.ConsumerSize())
+	rs := make([]routing.IRoutingTarget, 0, g.ConsumerSize())
 	g.group.ForEachElement(func(_ int, ele collectionx.IOrderHashElement) (stop bool) {
-		rs = append(rs, ele.(support.IRoutingTarget))
+		rs = append(rs, ele.(routing.IRoutingTarget))
 		return false
 	})
 	return rs

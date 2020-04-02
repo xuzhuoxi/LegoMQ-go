@@ -17,6 +17,7 @@ func (s *regexStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// 正则算法路由
 // 空字符串忽略
 // routingKey和locateId只要命中其中一个，则判定为命中
 func (s *regexStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
