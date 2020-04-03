@@ -40,14 +40,19 @@ var (
 			//{Id: "C01_Backup", Mode: consumer.LogConsumer, Formats: []string{"Log02"}},
 		},
 		Routing: broker.BrokerRoutingSetting{
-			ProducerRouting: routing.AlwaysRouting, QueueRouting: routing.CaseWordsRouting,
+			ProducerRouting: routing.AlwaysRouting,
+			QueueRouting:    routing.CaseWordsRouting, QueueBatchDuration: 0, QueueBatchQuantity: 1,
 		},
 	}
 )
 
 func main() {
 	mqConfig, mqBroker := broker.NewMQBroker()
-	mqConfig.InitBroker(brokerSetting)
+	err := mqConfig.InitBroker(brokerSetting)
+	if nil != err {
+		fmt.Println(err)
+		return
+	}
 
 	p, _ := mqConfig.ProducerGroup().GetProducer("P01")
 	httpProducer = p.(producer.IHttpMessageProducer)

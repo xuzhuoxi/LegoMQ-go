@@ -13,29 +13,74 @@ import (
 )
 
 var (
-	ErrBridgeProducerNil = errors.New("")
-	ErrBridgeQueueNil    = errors.New("")
-	ErrBridgeConsumerNil = errors.New("")
-	ErrBridgeRoutingNil  = errors.New("")
+	ErrBridgeProducerNil = errors.New("BrokerBridge: Producer is nil. ")
+	ErrBridgeQueueNil    = errors.New("BrokerBridge: Queue is nil. ")
+	ErrBridgeConsumerNil = errors.New("BrokerBridge: Consumer is nil. ")
+	ErrBridgeRoutingNil  = errors.New("BrokerBridge: Routing strategy is nil. ")
 
-	ErrBridgeStarted = errors.New("")
-	ErrBridgeStopped = errors.New("")
+	ErrBridgeLinked    = errors.New("BrokerBridge: Bridge is linked. ")
+	ErrBridgeNotLinked = errors.New("BrokerBridge: Bridge is not linked. ")
+
+	ErrBridgeDriverDuration = errors.New("BrokerBridge: Duration < 0. ")
+	ErrBridgeDriverQuantity = errors.New("BrokerBridge: Quantity < 1. ")
 )
 
-type IBridgeProducer2Queue interface {
-	SetEntity(in producer.IMessageProducerGroup, out queue.IMessageQueueGroup) error
+type iBridge interface {
+	// 设置路由模式
+	// err:
+	//		ErrBridgeLinked: 		已经连接
+	// 		ErrRougingRegister:		路由模式未注册
 	SetRoutingMode(mode routing.RoutingMode) error
+	// 设置路由策略
+	// err:
+	//		ErrBridgeLinked: 		已经连接
+	// 		ErrBridgeRoutingNil:	strategy=nil
 	SetRoutingStrategy(strategy routing.IRoutingStrategy) error
+	// 连接
+	// err:
+	//		ErrBridgeLinked: 		已经连接
 	Link() error
+	// 取消连接
+	// err:
+	//		ErrBridgeNotLinked: 	未连接
 	Unlink() error
 }
 
+// Producer到Queue桥接器
+// 提供功能：
+// 		1.Producer消息捕捉
+//		2.消息路由
+// 		3.消息加入Queue
+type IBridgeProducer2Queue interface {
+	iBridge
+	// 设置桥接点
+	// err:
+	//		ErrBridgeLinked: 		已经连接
+	//		ErrBridgeProducerNil: 	pierIn=nil
+	//		ErrBridgeQueueNil: 		pierOut=nil
+	SetBridgePier(pierIn producer.IMessageProducerGroup, pierOut queue.IMessageQueueGroup) error
+}
+
+// Queue到Consumer桥接器
+// 提供功能：
+// 		1.按时间片从Queue中提取消息
+//		2.消息路由
+// 		3.消息加入Consumer处理
 type IBridgeQueue2Consumer interface {
-	SetEntity(in queue.IMessageQueueGroup, out consumer.IMessageConsumerGroup) error
-	SetRoutingMode(mode routing.RoutingMode) error
-	SetRoutingStrategy(strategy routing.IRoutingStrategy) error
-	Link(duration time.Duration, maxMessage int) error
-	Unlink() error
+	iBridge
+	// 设置桥接点
+	// err:
+	//		ErrBridgeLinked: 		已经连接
+	//		ErrBridgeQueueNil: 		pierIn=nil
+	//		ErrBridgeConsumerNil: 	pierOut=nil
+	SetBridgePier(pierIn queue.IMessageQueueGroup, pierOut consumer.IMessageConsumerGroup) error
+	// 初始化驱动器
+	// duration: 频率
+	// quantity: 批量
+	// err:
+	// 		ErrBridgeDriverDuration: duration<0
+	//		ErrBridgeDriverQuantity: quantity<1
+	InitDriver(duration time.Duration, quantity int) error
 }
 
 func NewBridgeProducer2Queue() IBridgeProducer2Queue {
@@ -46,8 +91,6 @@ func NewBridgeQueue2Consumer() IBridgeQueue2Consumer {
 	return newBridgeQueue2Consumer()
 }
 
-//---------------
-
 func newBridgeProducer2Queue() IBridgeProducer2Queue {
 	return &p2qBridge{}
 }
@@ -56,27 +99,30 @@ func newBridgeQueue2Consumer() IBridgeQueue2Consumer {
 	return &q2cBridge{}
 }
 
+//---------------
+
 type p2qBridge struct {
 	pGroup  producer.IMessageProducerGroup
 	qGroup  queue.IMessageQueueGroup
 	routing routing.IRoutingStrategy
+
 	mu      sync.RWMutex
 	started bool
 }
 
-func (b *p2qBridge) SetEntity(in producer.IMessageProducerGroup, out queue.IMessageQueueGroup) error {
+func (b *p2qBridge) SetBridgePier(pierIn producer.IMessageProducerGroup, pierOut queue.IMessageQueueGroup) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
-	if nil == in {
+	if nil == pierIn {
 		return ErrBridgeProducerNil
 	}
-	if nil == out {
+	if nil == pierOut {
 		return ErrBridgeQueueNil
 	}
-	b.pGroup, b.qGroup = in, out
+	b.pGroup, b.qGroup = pierIn, pierOut
 	return nil
 }
 
@@ -84,7 +130,7 @@ func (b *p2qBridge) SetRoutingMode(mode routing.RoutingMode) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
 	s, err := mode.NewRoutingStrategy()
 	if nil != err {
@@ -101,7 +147,7 @@ func (b *p2qBridge) SetRoutingStrategy(strategy routing.IRoutingStrategy) error 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
 	b.routing = strategy
 	return nil
@@ -111,7 +157,7 @@ func (b *p2qBridge) Link() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
 	b.routing.Config().SetRoutingTargets(b.qGroup.Config().RoutingElements())
 	b.pGroup.Config().SetProducedFunc(b.onProduced, b.onMultiProduced)
@@ -123,7 +169,7 @@ func (b *p2qBridge) Unlink() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if !b.started {
-		return ErrBridgeStopped
+		return ErrBridgeNotLinked
 	}
 	b.pGroup, b.routing, b.qGroup = nil, nil, nil
 	b.started = false
@@ -165,28 +211,32 @@ func (b *p2qBridge) onMultiProduced(msgArr []message.IMessageContext, locateId s
 //---------------
 
 type q2cBridge struct {
-	qGroup   queue.IMessageQueueGroup
-	cGroup   consumer.IMessageConsumerGroup
+	qGroup  queue.IMessageQueueGroup
+	cGroup  consumer.IMessageConsumerGroup
+	routing routing.IRoutingStrategy
+
 	driver   ITimeSliceDriver
-	routing  routing.IRoutingStrategy
-	mu       sync.RWMutex
-	started  bool
 	msgCache [][]message.IMessageContext
+	duration time.Duration
+	quantity int
+
+	mu      sync.RWMutex
+	started bool
 }
 
-func (b *q2cBridge) SetEntity(in queue.IMessageQueueGroup, out consumer.IMessageConsumerGroup) error {
+func (b *q2cBridge) SetBridgePier(pierIn queue.IMessageQueueGroup, pierOut consumer.IMessageConsumerGroup) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
-	if nil == in {
+	if nil == pierIn {
 		return ErrBridgeQueueNil
 	}
-	if nil == out {
+	if nil == pierOut {
 		return ErrBridgeConsumerNil
 	}
-	b.qGroup, b.cGroup = in, out
+	b.qGroup, b.cGroup = pierIn, pierOut
 	return nil
 }
 
@@ -194,7 +244,7 @@ func (b *q2cBridge) SetRoutingMode(mode routing.RoutingMode) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
 	s, err := mode.NewRoutingStrategy()
 	if nil != err {
@@ -211,21 +261,40 @@ func (b *q2cBridge) SetRoutingStrategy(strategy routing.IRoutingStrategy) error 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
 	b.routing = strategy
 	return nil
 }
 
-func (b *q2cBridge) Link(duration time.Duration, maxMessage int) error {
+func (b *q2cBridge) InitDriver(duration time.Duration, quantity int) error {
+	if duration < 0 {
+		return ErrBridgeDriverDuration
+	}
+	if quantity < 1 {
+		return ErrBridgeDriverQuantity
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if quantity > 1 {
+		b.msgCache = make([][]message.IMessageContext, b.qGroup.Config().QueueSize(), b.qGroup.Config().QueueSize())
+		for idx, _ := range b.msgCache {
+			b.msgCache[idx] = make([]message.IMessageContext, quantity, quantity)
+		}
+	}
+	b.duration, b.quantity = duration, quantity
+	b.driver = NewTimeSliceDriver(duration)
+	return nil
+
+}
+
+func (b *q2cBridge) Link() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.started {
-		return ErrBridgeStarted
+		return ErrBridgeLinked
 	}
-	b.initCache(maxMessage)
 	b.routing.Config().SetRoutingTargets(b.cGroup.Config().RoutingElements())
-	b.driver = NewTimeSliceDriver(duration)
 	b.driver.AddEventListener(EventOnTime, b.onTime)
 	err := b.driver.DriverStart()
 	if nil != err {
@@ -239,7 +308,7 @@ func (b *q2cBridge) Unlink() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if !b.started {
-		return ErrBridgeStopped
+		return ErrBridgeNotLinked
 	}
 	err := b.driver.DriverStop()
 	if nil != err {
@@ -250,21 +319,26 @@ func (b *q2cBridge) Unlink() error {
 	return nil
 }
 
-func (b *q2cBridge) initCache(maxMessage int) {
-	b.msgCache = make([][]message.IMessageContext, b.qGroup.Config().QueueSize(), b.qGroup.Config().QueueSize())
-	for idx, _ := range b.msgCache {
-		b.msgCache[idx] = make([]message.IMessageContext, maxMessage, maxMessage)
+func (b *q2cBridge) onTime(evt *eventx.EventData) {
+	if b.quantity == 1 {
+		b.readEachMessage()
+	} else {
+		b.readEachMessages()
 	}
 }
 
-func (b *q2cBridge) onTime(evt *eventx.EventData) {
-	//fmt.Println(22222222)
+func (b *q2cBridge) readEachMessage() {
 	b.qGroup.ForEachElement(func(index int, ele queue.IMessageContextQueue) (stop bool) {
-		//ctx, err := ele.ReadContext()
-		//if nil == err {
-		//	b.handleMessage(ctx, ele.LocateId())
-		//}
-		//return false
+		ctx, err := ele.ReadContext()
+		if nil == err {
+			b.handleMessage(ctx, ele.LocateId())
+		}
+		return false
+	})
+}
+
+func (b *q2cBridge) readEachMessages() {
+	b.qGroup.ForEachElement(func(index int, ele queue.IMessageContextQueue) (stop bool) {
 		count, _ := ele.ReadContextsTo(b.msgCache[index])
 		if count > 0 {
 			b.handleMessages(b.msgCache[index][:count], ele.LocateId())

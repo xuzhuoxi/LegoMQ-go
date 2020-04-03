@@ -11,8 +11,8 @@ var (
 )
 
 var (
-	ErrDriverStarted = errors.New("Driver started. ")
-	ErrDriverStopped = errors.New("Driver stopped. ")
+	ErrDriverStarted = errors.New("Broker: Driver started. ")
+	ErrDriverStopped = errors.New("Broker: Driver stopped. ")
 )
 
 func NewTimeSliceDriver(duration time.Duration) ITimeSliceDriver {
