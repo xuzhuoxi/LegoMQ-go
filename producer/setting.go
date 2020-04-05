@@ -33,8 +33,7 @@ func (ps ProducerSetting) NewMessageProducer() (producer IMessageProducer, err e
 // 消息生产者设置
 // Http消息接收服务器
 type ProducerSettingHttp struct {
-	Addr    string
-	Network netx.SockNetwork
+	Addr string
 }
 
 // 消息生产者设置

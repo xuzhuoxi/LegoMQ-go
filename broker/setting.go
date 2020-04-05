@@ -20,9 +20,9 @@ type BrokerSetting struct {
 type BrokerRoutingSetting struct {
 	ProducerRouting routing.RoutingMode `json:"PRouting"` // 队列前置路由(生产者 -> 队列)
 
-	QueueRouting       routing.RoutingMode `json:"QRouting"`  // 队列后置路由(队列 -> 消费者)
-	QueueBatchDuration time.Duration       `json:"QDuration"` // 队列后置路由时间片
-	QueueBatchQuantity int                 `json:"QQuantity"` // 队列后置处理批量
+	QueueRouting         routing.RoutingMode `json:"QRouting"`  // 队列后置路由(队列 -> 消费者)
+	QueueRoutingDuration time.Duration       `json:"QDuration"` // 队列后置路由时间片
+	QueueRoutingQuantity int                 `json:"QQuantity"` // 队列后置处理批量
 }
 
 func (s BrokerSetting) NewMQBroker() (b IMQBroker, err error) {

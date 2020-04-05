@@ -9,7 +9,6 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/queue"
 	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/logx"
-	"github.com/xuzhuoxi/infra-go/netx"
 	"net/http"
 	"time"
 )
@@ -27,7 +26,7 @@ var (
 	brokerSetting = broker.BrokerSetting{
 		Producers: []producer.ProducerSetting{
 			{Id: "P01", Mode: producer.HttpProducer, LocateId: "Http0",
-				Http: producer.ProducerSettingHttp{Addr: ":10000", Network: netx.TcpNetwork}},
+				Http: producer.ProducerSettingHttp{Addr: ":10000"}},
 		},
 		Queues: []queue.QueueSetting{
 			{Id: "Q01", Mode: queue.ChannelBlockingQueue, Size: 256, LocateId: "Queue01", Formats: []string{"Http0"}},
@@ -41,7 +40,7 @@ var (
 		},
 		Routing: broker.BrokerRoutingSetting{
 			ProducerRouting: routing.AlwaysRouting,
-			QueueRouting:    routing.CaseWordsRouting, QueueBatchDuration: 0, QueueBatchQuantity: 1,
+			QueueRouting:    routing.CaseWordsRouting, QueueRoutingDuration: 0, QueueRoutingQuantity: 1,
 		},
 	}
 )

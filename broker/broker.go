@@ -131,7 +131,7 @@ func (b *mqBroker) initBroker(setting BrokerSetting) error {
 
 	b.q2cBridge.SetBridgePier(b.queueGroup, b.consumerGroup)
 	b.q2cBridge.SetRoutingMode(setting.Routing.QueueRouting)
-	err := b.q2cBridge.InitDriver(setting.Routing.QueueBatchDuration, setting.Routing.QueueBatchQuantity)
+	err := b.q2cBridge.InitDriver(setting.Routing.QueueRoutingDuration, setting.Routing.QueueRoutingQuantity)
 	if nil != err {
 		return err
 	}

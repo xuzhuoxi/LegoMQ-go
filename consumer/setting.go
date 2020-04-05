@@ -8,9 +8,9 @@ import (
 type ConsumerSetting struct {
 	Id      string       // 标识
 	Mode    ConsumerMode // 消息生产者模式
-	Formats []string     // 格式匹配信息ss
+	Formats []string     // 格式匹配信息
 
-	Log ConsumerSettingLog
+	Log ConsumerSettingLog //日志记录配置
 }
 
 // 日志消息消费者设置
