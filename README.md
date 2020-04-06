@@ -7,6 +7,8 @@ LegoMQ是一个使用go语言编写的消息中间件。具有高并发、高
 - [背景](#背景)
 - [安装&下载](#安装&下载)
 - [使用说明](#使用说明)
+	- [配置说明](#配置说明)
+	- [功能扩展](#功能扩展)
 - [示例](#示例)
 - [相关仓库](#相关仓库)
 - [维护者](#维护者)
@@ -14,7 +16,7 @@ LegoMQ是一个使用go语言编写的消息中间件。具有高并发、高
 
 ## 背景
 
-1. 单独Log服务器、消息转发服务器的需求。
+1. 独立的Log服务器、消息处理服务器的需求。
 2. 高并发、高吞吐要求。
 3. 组件单独可应用。
 4. 高可扩展性要求。
@@ -181,17 +183,33 @@ LegoMQ是一个使用go语言编写的消息中间件。具有高并发、高
 	
 ### 功能扩展
 
+当LegoMQ默认包含的功能不能满足需求时，可以自行扩展功能并加入到LegoMQ中。以下为四4个重要组件的扩展说明。
+
 #### ProducerMode扩展
 
+1. 定义一个新的ProducerMode，建议使用值与现有([查看producer.go](/producer/producer.go))不一致，也可以直接使用CustomizeProducer进行扩展。
+2. 创建新模式对应的结构体(假设为"PX")，实现IMessageProducer接口并完成逻辑开发。
+3. 如果想同时增加对ProducerSetting的扩展支持，PX应该同时实现IProducerSettingSupport接口。并在InitProducer函数实现完成的初始化行为。
+4. 注册：调用`RegisterProducerMode`注册新模式实例的构造行为。
 
 #### ConsumerMode扩展
 
+1. 定义一个新的ConsumerMode，建议使用值与现有([查看consumer.go](/consumer/consumer.go))不一致，也可以直接使用CustomizeConsumer进行扩展。
+2. 创建新模式对应的结构体(假设为"CX")，实现IMessageConsumer接口并完成逻辑开发。
+3. 如果想同时增加对ConsumerSetting的扩展支持，CX应该同时实现IConsumerSettingSupport接口。并在InitConsumer函数实现完成的初始化行为。
+4. 注册：调用`RegisterConsumerMode`注册新模式实例的构造行为。
 
 #### QueueMode扩展
 
+1. 定义一个新的QueueMode，建议使用值与现有([查看queue.go](/queue/queue.go))不一致，也可以直接使用CustomizeQueue进行扩展。
+2. 创建新模式对应的结构体(假设为"QX")，实现IMessageContextQueue接口并完成逻辑开发。
+3. 注册：调用`RegisterQueueMode`注册新模式实例的构造行为。
 
 #### RoutingMode扩展
 
+1. 定义一个新的RoutingMode，建议使用值与现有([查看routing.go](/routing/routing.go))不一致，也可以直接使用CustomizeRouting进行扩展。
+2. 创建新模式对应的结构体(假设为"RX")，实现IRoutingStrategy和IRoutingStrategyConfig接口并完成逻辑开发。
+3. 注册：调用`RegisterRoutingStrategy`注册新模式实例的构造行为。
 
 ## 示例
 

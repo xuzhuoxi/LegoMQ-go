@@ -41,9 +41,9 @@ func (cs ConsumerSetting) NewMessageConsumer() (consumer IMessageConsumer, err e
 // 消息消费者设置支持接口
 type IConsumerSettingSupport interface {
 	// 设置配置数据
-	SetSetting(setting ConsumerSetting)
+	SetSetting(setting interface{})
 	// 读取配置数据
-	Setting() ConsumerSetting
+	Setting() interface{}
 
 	// 根据配置数据初始化
 	InitConsumer() error
@@ -57,10 +57,10 @@ type ConsumerSettingSupport struct {
 	setting ConsumerSetting
 }
 
-func (s *ConsumerSettingSupport) SetSetting(setting ConsumerSetting) {
-	s.setting = setting
+func (s *ConsumerSettingSupport) SetSetting(setting interface{}) {
+	s.setting = setting.(ConsumerSetting)
 }
 
-func (s *ConsumerSettingSupport) Setting() ConsumerSetting {
+func (s *ConsumerSettingSupport) Setting() interface{} {
 	return s.setting
 }

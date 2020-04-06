@@ -45,9 +45,9 @@ type ProducerSettingRPC struct {
 // 消息生产者设置支持接口
 type IProducerSettingSupport interface {
 	// 设置配置数据
-	SetSetting(setting ProducerSetting)
+	SetSetting(setting interface{})
 	// 读取配置数据
-	Setting() ProducerSetting
+	Setting() interface{}
 
 	// 根据配置数据初始化
 	InitProducer() error
@@ -61,10 +61,10 @@ type ProducerSettingSupport struct {
 	setting ProducerSetting
 }
 
-func (s *ProducerSettingSupport) SetSetting(setting ProducerSetting) {
-	s.setting = setting
+func (s *ProducerSettingSupport) SetSetting(setting interface{}) {
+	s.setting = setting.(ProducerSetting)
 }
 
-func (s *ProducerSettingSupport) Setting() ProducerSetting {
+func (s *ProducerSettingSupport) Setting() interface{} {
 	return s.setting
 }
