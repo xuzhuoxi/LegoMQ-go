@@ -90,7 +90,7 @@ func (p *sockMessageProducer) StopSockListener() error {
 }
 
 func (p *sockMessageProducer) start(params netx.SockParams) error {
-	if p.sockServer.Running() {
+	if p.sockServer.IsRunning() {
 		return netx.ErrSockServerStarted
 	}
 	var err error
