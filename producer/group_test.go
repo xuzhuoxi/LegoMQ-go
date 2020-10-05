@@ -8,7 +8,7 @@ import (
 )
 
 var settings = []ProducerSetting{
-	{Id: "1", Mode: HttpProducer, LocateId: "H1", Http: ProducerSettingHttp{Addr: "", Network: netx.TcpNetwork}},
+	{Id: "1", Mode: HttpProducer, LocateId: "H1", Http: ProducerSettingHttp{Addr: ""}},
 	{Id: "2", Mode: RPCProducer, LocateId: "R2", RPC: ProducerSettingRPC{Addr: ""}},
 	{Id: "3", Mode: SockProducer, LocateId: "S3", Sock: netx.SockParams{Network: netx.TcpNetwork, LocalAddress: ":9000"}}}
 

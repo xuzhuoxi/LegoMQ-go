@@ -5,6 +5,7 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
+	"github.com/xuzhuoxi/infra-go/netx/tcpx"
 	"testing"
 	"time"
 )
@@ -29,7 +30,7 @@ func TestNewSockMessageProducer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	client := netx.NewTCPClient()
+	client := tcpx.NewTCPClient()
 	err = client.OpenClient(netx.SockParams{RemoteAddress: "127.0.0.1:9000"})
 	if nil != err {
 		t.Fatal(err)
