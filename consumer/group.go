@@ -2,11 +2,12 @@ package consumer
 
 import (
 	"errors"
+	"strconv"
+	"sync"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
-	"strconv"
-	"sync"
 )
 
 var (
@@ -15,92 +16,114 @@ var (
 	ErrConsumerIndexRange = errors.New("MessageConsumer: Index out of range. ")
 )
 
+// IMessageConsumerGroupConfig
 // 消息消费者组
 // 配置接口
 type IMessageConsumerGroupConfig interface {
+	// ConsumerSize
 	// 消费者数量
 	ConsumerSize() int
+	// ConsumerIds
 	// 消费者标识信息
 	ConsumerIds() []string
 
+	// CreateConsumer
 	// 创建一个消费者，id使用默认规则创建
 	// err:
 	// 		ErrConsumerModeUnregister:	ConsumerMode未注册
 	CreateConsumer(mode ConsumerMode) (consumer IMessageConsumer, err error)
+	// CreateConsumers
 	// 创建一个消费者，id使用默认规则创建
 	// err:
 	// 		ErrConsumerModeUnregister:	ConsumerMode未注册
 	CreateConsumers(modes []ConsumerMode) (consumers []IMessageConsumer, err []error)
+	// AddConsumer
 	// 加入一个消费者
 	// err:
 	// 		ErrConsumerNil:			Consumer为nil
 	//		ErrConsumerIdExists:	ConsumerId重复
 	AddConsumer(consumer IMessageConsumer) error
+	// AddConsumers
 	// 加入多个消费者
 	// count: 成功加入的消费者数量
 	// err:
 	// 		ErrConsumerNil:			Consumer为nil
 	//		ErrConsumerIdExists:	ConsumerId重复
 	AddConsumers(consumers []IMessageConsumer) (count int, failArr []IMessageConsumer, err []error)
+	// RemoveConsumer
 	// 移除一个消费者
 	// consumer: 返回被移除的消费者
 	// err:
 	//		ErrConsumerIdUnknown:	ConsumerId不存在
 	RemoveConsumer(consumerId string) (consumer IMessageConsumer, err error)
+	// RemoveConsumers
 	// 移除多个消费者
 	// consumers: 返回被移除的消费者数组
 	// err:
 	//		ErrConsumerIdUnknown:	ConsumerId不存在
 	RemoveConsumers(consumerIdArr []string) (consumers []IMessageConsumer, err []error)
+	// UpdateConsumer
 	// 替换一个消费者
 	// 根据ConsumerId进行替换，如果找不到相同ConsumerId，直接加入
 	// err:
 	// 		ErrConsumerNil:			Consumer为nil
 	UpdateConsumer(consumer IMessageConsumer) (err error)
+	// UpdateConsumers
 	// 替换一个消费者
 	// 根据ConsumerId进行替换，如果找不到相同ConsumerId，直接加入
 	// err:
 	// 		ErrConsumerNil:			Consumer为nil
 	UpdateConsumers(consumers []IMessageConsumer) (err []error)
+	// InitConsumerGroup
 	// 使用配置初始化消费者组，覆盖旧配置
 	InitConsumerGroup(settings []ConsumerSetting) (consumers []IMessageConsumer, err error)
+	// RoutingElements
 	// 路由元素
 	RoutingElements() []routing.IRoutingTarget
 }
 
+// IMessageConsumerGroup
 // 消息消费者组
 // 操作接口
 type IMessageConsumerGroup interface {
+	// Config
 	// 配置入口
 	Config() IMessageConsumerGroupConfig
+	// GetConsumer
 	// 取生成者
 	// err:
 	// 		ErrConsumerIdUnknown:	ConsumerId不存在
 	GetConsumer(producerId string) (IMessageConsumer, error)
+	// GetConsumerAt
 	// 取生成者
 	// err:
 	// 		ErrConsumerIndexRange:	index越界
 	GetConsumerAt(index int) (IMessageConsumer, error)
+	// ConsumeMessage
 	// 被动接收一个消息并进行处理
 	// err:
 	// 		ErrConsumerMessageNil: msg=nil时
 	// 		ErrConsumerIdUnknown: ConsumerId不存在
 	ConsumeMessage(msg message.IMessageContext, consumerId string) error
+	// ConsumeMessageMulti
 	// 被动接收一个消息并进行处理
 	// err:
 	// 		ErrConsumerMessageNil: msg=nil时
 	// 		ErrConsumerIdUnknown: ConsumerId不存在
 	ConsumeMessageMulti(msg message.IMessageContext, consumerIds []string) (err []error)
+	// ConsumeMessages
 	// 被动接收多个消息并进行处理
 	// err:
 	//		ErrConsumerMessagesEmpty: msg长度为0
 	// 		ErrConsumerIdUnknown: ConsumerId不存在
 	//		其它错误
 	ConsumeMessages(msg []message.IMessageContext, consumerId string) error
+	// ForEachElement
 	// 遍历元素
 	ForEachElement(f func(index int, ele IMessageConsumer) (stop bool))
 }
 
+// NewMessageConsumerGroup
 // 实例化消息消费者组
 // config: 	配置接口
 // group: 	操作接口

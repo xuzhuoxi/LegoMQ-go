@@ -4,8 +4,7 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
-	"github.com/xuzhuoxi/infra-go/netx"
-	"time"
+	"github.com/xuzhuoxi/infra-go/netx/rpcx"
 )
 
 func NewRPCMessageProducer() IRPCMessageProducer {
@@ -23,7 +22,7 @@ type rpcMessageProducer struct {
 	support.ElementSupport
 	ProducerSettingSupport
 
-	rpcServer netx.IRPCServer
+	rpcServer rpcx.IRPCServer
 }
 
 func (p *rpcMessageProducer) InitProducer() error {
@@ -32,7 +31,7 @@ func (p *rpcMessageProducer) InitProducer() error {
 	}
 	p.SetId(p.setting.Id)
 	p.SetLocateId(p.setting.LocateId)
-	p.rpcServer = netx.NewRPCServer()
+	p.rpcServer = rpcx.NewRPCServer()
 	return nil
 }
 
@@ -60,12 +59,12 @@ func (p *rpcMessageProducer) NotifyMessagesProduced(msg []message.IMessageContex
 	return nil
 }
 
-func (p *rpcMessageProducer) InitRPCServer() (s netx.IRPCServer, err error) {
-	p.rpcServer = netx.NewRPCServer()
+func (p *rpcMessageProducer) InitRPCServer() (s rpcx.IRPCServer, err error) {
+	p.rpcServer = rpcx.NewRPCServer()
 	return p.rpcServer, nil
 }
 
-func (p *rpcMessageProducer) RPCServer() netx.IRPCServer {
+func (p *rpcMessageProducer) RPCServer() rpcx.IRPCServer {
 	return p.rpcServer
 }
 
@@ -82,12 +81,8 @@ func (p *rpcMessageProducer) StopRPCListener() error {
 }
 
 func (p *rpcMessageProducer) start(addr string) error {
-	var err error
-	go func() {
-		p.rpcServer.StartServer(addr)
-	}()
-	time.Sleep(time.Millisecond * 20)
-	return err
+	p.rpcServer.StartServer(addr)
+	return nil
 }
 
 func (p *rpcMessageProducer) stop() error {

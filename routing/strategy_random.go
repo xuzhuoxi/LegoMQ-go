@@ -16,6 +16,7 @@ func (s *randomStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 忽略routingKey，locateId
 // 随机选择
 func (s *randomStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
@@ -35,6 +36,7 @@ func (s *randomStrategy) match(key string, format string) bool {
 
 //---------------------------------
 
+// NewRandomRoutingStrategy
 // 创建一个随机路由的策略实例
 func NewRandomRoutingStrategy() IRoutingStrategy {
 	return &randomStrategy{StrategyConfig: StrategyConfig{}}

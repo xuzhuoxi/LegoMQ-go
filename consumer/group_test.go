@@ -2,8 +2,9 @@ package consumer
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/infra-go/logx"
 	"testing"
+
+	"github.com/xuzhuoxi/infra-go/logx"
 )
 
 var settings = []ConsumerSetting{

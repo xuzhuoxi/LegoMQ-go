@@ -2,11 +2,12 @@ package queue
 
 import (
 	"errors"
+	"strconv"
+	"sync"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
-	"strconv"
-	"sync"
 )
 
 var (
@@ -15,26 +16,33 @@ var (
 	ErrQueueIndexRange = errors.New("MessageQueueGroup: Index out of range. ")
 )
 
+// IMessageQueueGroupConfig
 // 消息队列组
 // 配置接口
 type IMessageQueueGroupConfig interface {
+	// QueueSize
 	// 队列数量
 	QueueSize() int
+	// QueueIds
 	// 队列标识信息
 	QueueIds() []string
+	// CreateQueue
 	// 创建一个队列并加入到组，id使用默认规则创建
 	// err:
 	// 		ErrQueueModeUnregister:	QueueMode未注册
 	CreateQueue(mode QueueMode, size int) (queue IMessageContextQueue, err error)
+	// CreateQueues
 	// 创建多个队列并加入到组，id使用默认规则创建
 	// err:
 	// 		ErrQueueModeUnregister:	QueueMode未注册
 	CreateQueues(modes []QueueMode, size int) (queues []IMessageContextQueue, err []error)
+	// AddQueue
 	// 加入一个队列
 	// err:
 	// 		ErrQueueNil:		queue为nil时
 	//		ErrQueueIdExists:	QueueId重复时
 	AddQueue(queue IMessageContextQueue) error
+	// AddQueues
 	// 加入多个队列
 	// count: 成功加入的队列数量
 	// err1:
@@ -42,43 +50,53 @@ type IMessageQueueGroupConfig interface {
 	// err2:
 	//		ErrQueueIdExists:	QueueId重复时
 	AddQueues(queues []IMessageContextQueue) (count int, failArr []IMessageContextQueue, err []error)
+	// RemoveQueue
 	// 移除一个队列
 	// queue: 返回被移除的队列
 	// err:
 	//		ErrQueueIdUnknown:	QueueId不存在时
 	RemoveQueue(queueId string) (queue IMessageContextQueue, err error)
+	// RemoveQueues
 	// 移除多个队列
 	// queues: 返回被移除的队列数组
 	// err:
 	//		ErrQueueIdUnknown:	QueueId不存在时
 	RemoveQueues(queueIdArr []string) (queues []IMessageContextQueue, err []error)
+	// UpdateQueue
 	// 替换一个队列
 	// 根据QueueId进行替换，如果找不到相同QueueId，直接加入
 	// err:
 	// 		ErrQueueNil:	queue为nil时
 	UpdateQueue(queue IMessageContextQueue) (err error)
+	// UpdateQueues
 	// 替换一个队列
 	// 根据QueueId进行替换，如果找不到相同QueueId，直接加入
 	// err:
 	// 		ErrQueueNil:	queue为nil时
 	UpdateQueues(queues []IMessageContextQueue) (err []error)
+	// InitQueueGroup
 	// 使用配置初始化队列组，覆盖旧配置
 	InitQueueGroup(settings []QueueSetting) (queues []IMessageContextQueue, err error)
+	// RoutingElements
 	// 路由集合信息
 	RoutingElements() []routing.IRoutingTarget
 }
 
+// IMessageQueueGroupReader
 // 消息队列组
 // 读取接口
 type IMessageQueueGroupReader interface {
+	// ReadMessageFrom
 	// 从某个队列中读取一条消息
 	// err:
 	//		QueueId不存在时返回 ErrQueueIdUnknown
 	ReadMessageFrom(queueId string) (msg message.IMessageContext, err error)
+	// ReadMessagesFrom
 	// 从某个队列中读取多条消息
 	// err:
 	//		QueueId不存在时返回 ErrQueueIdUnknown
 	ReadMessagesFrom(queueId string, count int) (msg []message.IMessageContext, err error)
+	// ReadMessagesTo
 	// 从某个队列中读取多条消息并放入到指定数组中
 	// count: 成功读取的信息数量
 	// err:
@@ -86,14 +104,17 @@ type IMessageQueueGroupReader interface {
 	ReadMessagesTo(queueId string, msg []message.IMessageContext) (count int, err error)
 }
 
+// IMessageQueueGroupWriter
 // 消息队列组
 // 写入接口
 type IMessageQueueGroupWriter interface {
+	// WriteMessageTo
 	// 往指定消息队列写入一个消息
 	// err:
 	//		ErrQueueIdUnknown:	QueueId不存在时返回
 	//		写入失败时返回相应错误
 	WriteMessageTo(msg message.IMessageContext, queueId string) error
+	// WriteMessageToMulti
 	// 往指定消息队列写入一个消息
 	// count: 成功写入的队列数量
 	// failArr: 未写入的队列标识数组
@@ -102,6 +123,7 @@ type IMessageQueueGroupWriter interface {
 	// err2:
 	//		写入失败时返回相应错误
 	WriteMessageToMulti(msg message.IMessageContext, queueIdArr []string) (count int, failArr []string, err1 error, err2 error)
+	// WriteMessagesTo
 	// 往指定消息队列写入多个消息
 	// 返回说明：
 	// count: 成功写入消息的数量
@@ -109,6 +131,7 @@ type IMessageQueueGroupWriter interface {
 	//		ErrQueueIdUnknown:	QueueId不存在时返回
 	//		写入失败时返回相应错误
 	WriteMessagesTo(msg []message.IMessageContext, queueId string) (count int, err error)
+	// WriteMessagesToMulti
 	// 往指定消息队列写入多个消息
 	// 返回说明：
 	// err1:
@@ -118,25 +141,31 @@ type IMessageQueueGroupWriter interface {
 	WriteMessagesToMulti(msg []message.IMessageContext, queueIdArr []string) (err1 error, err2 error)
 }
 
+// IMessageQueueGroup
 // 消息队列组
 // 操作接口
 type IMessageQueueGroup interface {
 	IMessageQueueGroupReader // 读操作
 	IMessageQueueGroupWriter // 写操作
+	// GetQueue
 	// 取生成者
 	// err:
 	// 		ErrQueueIdUnknown:	QueueId不存在
 	GetQueue(queueId string) (IMessageContextQueue, error)
+	// GetQueueAt
 	// 取生成者
 	// err:
 	// 		ErrQueueIndexRange:	index越界
 	GetQueueAt(index int) (IMessageContextQueue, error)
+	// Config
 	// 配置入口
 	Config() IMessageQueueGroupConfig
+	// ForEachElement
 	// 遍历元素
 	ForEachElement(f func(index int, ele IMessageContextQueue) (stop bool))
 }
 
+// NewMessageQueueGroup
 // 实例化消息队列组
 // config: 	配置接口
 // group: 	操作接口

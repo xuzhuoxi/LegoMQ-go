@@ -2,11 +2,12 @@ package producer
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/infra-go/eventx"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/infra-go/eventx"
 )
 
 func TestHttpMessageProducer_HttpServer(t *testing.T) {

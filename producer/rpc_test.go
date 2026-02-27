@@ -2,11 +2,12 @@ package producer
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/LegoMQ-go/message"
-	"github.com/xuzhuoxi/infra-go/eventx"
-	"github.com/xuzhuoxi/infra-go/netx"
 	"testing"
 	"time"
+
+	"github.com/xuzhuoxi/LegoMQ-go/message"
+	"github.com/xuzhuoxi/infra-go/eventx"
+	"github.com/xuzhuoxi/infra-go/netx/rpcx"
 )
 
 type Args struct {
@@ -34,9 +35,14 @@ func TestNewRPCMessageProducer(t *testing.T) {
 	RObject := &Arith{Producer: producer}
 	producer.Register(RObject)
 	producer.AddEventListener(EventMessageOnProducer, onRPCProduced)
-	producer.StartRPCListener("127.0.0.1:9000")
+	go func() {
+		err := producer.StartRPCListener("127.0.0.1:9000")
+		if nil != err {
+			t.Fatal(err)
+		}
+	}()
 
-	client := netx.NewRPCClient(netx.RpcNetworkTCP)
+	client := rpcx.NewRPCClient()
 	client.Dial("127.0.0.1:9000")
 	args := &Args{}
 	reply := new(Reply)

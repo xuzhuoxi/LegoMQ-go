@@ -1,13 +1,15 @@
 package broker
 
 import (
+	"time"
+
 	"github.com/xuzhuoxi/LegoMQ-go/consumer"
 	"github.com/xuzhuoxi/LegoMQ-go/producer"
 	"github.com/xuzhuoxi/LegoMQ-go/queue"
 	"github.com/xuzhuoxi/LegoMQ-go/routing"
-	"time"
 )
 
+// BrokerSetting
 // Broker配置信息
 type BrokerSetting struct {
 	Producers []producer.ProducerSetting // 生产者
@@ -16,6 +18,7 @@ type BrokerSetting struct {
 	Routing   BrokerRoutingSetting       // 路由
 }
 
+// BrokerRoutingSetting
 // Broker路由配置信息
 type BrokerRoutingSetting struct {
 	ProducerRouting routing.RoutingMode `json:"PRouting"` // 队列前置路由(生产者 -> 队列)

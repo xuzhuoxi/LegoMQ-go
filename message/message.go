@@ -9,24 +9,33 @@ import (
 var index = 0
 var mu sync.Mutex
 
+// IMessageContextHeader
 // 消息头接口
 type IMessageContextHeader interface {
+	// RoutingKey
 	// 路由信息
 	RoutingKey() string
+	// SenderAddr
 	// 发送者信息
 	SenderAddr() string
+	// Timestamp
 	// 生成时间戳
 	Timestamp() int64
+	// Index
 	// 生成序号
 	Index() int
+	// Header
 	// 业务扩展消息头
 	Header() interface{}
 }
 
+// IMessageContext
 // 消息上下文
 type IMessageContext interface {
+	// IMessageContextHeader
 	// 消息头
 	IMessageContextHeader
+	// Body
 	// 消息体
 	Body() interface{}
 }

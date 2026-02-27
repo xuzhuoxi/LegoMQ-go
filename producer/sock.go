@@ -5,7 +5,6 @@ import (
 	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
-	"time"
 )
 
 func NewSockMessageProducer() ISockMessageProducer {
@@ -93,12 +92,7 @@ func (p *sockMessageProducer) start(params netx.SockParams) error {
 	if p.sockServer.IsRunning() {
 		return netx.ErrSockServerStarted
 	}
-	var err error
-	go func() {
-		err = p.sockServer.StartServer(params)
-	}()
-	time.Sleep(time.Millisecond * 20)
-	return err
+	return p.sockServer.StartServer(params)
 }
 
 func (p *sockMessageProducer) stop() error {
@@ -114,8 +108,8 @@ func (p *sockMessageProducer) notifyMultiMsgProduced(msg []message.IMessageConte
 	p.DispatchEvent(EventMultiMessageOnProducer, p, msg)
 }
 
-func (p *sockMessageProducer) onSockPackTest(data []byte, senderAddress string, other interface{}) (catch bool) {
-	msg := message.NewMessageContext("", senderAddress, nil, data)
+func (p *sockMessageProducer) onSockPackTest(data []byte, connInfo netx.IConnInfo, other interface{}) (catch bool) {
+	msg := message.NewMessageContext("", connInfo.GetConnId(), nil, data)
 	p.notifyMsgProduced(msg)
 	return true
 }

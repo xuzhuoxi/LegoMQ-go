@@ -27,6 +27,7 @@ func (s *neverStrategy) TargetSize() int {
 	return 0
 }
 
+// Route
 // 忽略routingKey，locateId
 // 命中失败
 func (s *neverStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
@@ -39,6 +40,7 @@ func (s *neverStrategy) match(key string, format string) bool {
 
 //---------------------------------
 
+// NewNeverRoutingStrategy
 // 创建一个Never路由策略实例
 func NewNeverRoutingStrategy() IRoutingStrategy {
 	return &neverStrategy{}

@@ -1,12 +1,13 @@
 package producer
 
 import (
+	"net/http"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
-	"net/http"
-	"time"
+	"github.com/xuzhuoxi/infra-go/netx/httpx"
 )
 
 func NewHttpMessageProducer() IHttpMessageProducer {
@@ -24,7 +25,7 @@ type httpMessageProducer struct {
 	support.ElementSupport
 	ProducerSettingSupport
 
-	httpServer netx.IHttpServer
+	httpServer httpx.IHttpServer
 }
 
 func (p *httpMessageProducer) InitProducer() error {
@@ -33,7 +34,7 @@ func (p *httpMessageProducer) InitProducer() error {
 	}
 	p.SetId(p.setting.Id)
 	p.SetLocateId(p.setting.LocateId)
-	p.httpServer = netx.NewHttpServer()
+	p.httpServer = httpx.NewHttpServer()
 	return nil
 }
 
@@ -61,12 +62,12 @@ func (p *httpMessageProducer) NotifyMessagesProduced(msg []message.IMessageConte
 	return nil
 }
 
-func (p *httpMessageProducer) InitHttpServer() (s netx.IHttpServer, err error) {
-	p.httpServer = netx.NewHttpServer()
+func (p *httpMessageProducer) InitHttpServer() (s httpx.IHttpServer, err error) {
+	p.httpServer = httpx.NewHttpServer()
 	return p.httpServer, nil
 }
 
-func (p *httpMessageProducer) HttpServer() netx.IHttpServer {
+func (p *httpMessageProducer) HttpServer() httpx.IHttpServer {
 	return p.httpServer
 }
 
@@ -88,12 +89,7 @@ func (p *httpMessageProducer) start(addr string) error {
 	if p.httpServer.Running() {
 		return netx.ErrHttpServerStarted
 	}
-	var err error
-	go func() {
-		err = p.httpServer.StartServer(addr)
-	}()
-	time.Sleep(time.Millisecond * 20)
-	return err
+	return p.httpServer.StartServer(addr)
 }
 
 func (p *httpMessageProducer) stop() error {

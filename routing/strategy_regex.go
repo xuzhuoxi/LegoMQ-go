@@ -1,8 +1,9 @@
 package routing
 
 import (
-	"github.com/xuzhuoxi/infra-go/slicex"
 	"regexp"
+
+	"github.com/xuzhuoxi/infra-go/slicex"
 )
 
 type regexStrategy struct {
@@ -17,6 +18,7 @@ func (s *regexStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 正则算法路由
 // 空字符串忽略
 // routingKey和locateId只要命中其中一个，则判定为命中
@@ -63,6 +65,7 @@ func (s *regexStrategy) regexMath(key string, result []string) []string {
 
 //---------------------
 
+// NewRegexRoutingStrategy
 // 创建一个Words路由策略实例
 func NewRegexRoutingStrategy() IRoutingStrategy {
 	return &regexStrategy{StrategyConfig: StrategyConfig{}}

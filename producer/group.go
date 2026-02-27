@@ -2,11 +2,12 @@ package producer
 
 import (
 	"errors"
+	"strconv"
+	"sync"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
-	"strconv"
-	"sync"
 )
 
 var (
@@ -18,79 +19,99 @@ var (
 type FuncOnMessageProduced func(msg message.IMessageContext, locateId string)
 type FuncOnMessagesProduced func(msg []message.IMessageContext, locateId string)
 
+// IMessageProducerGroupConfig
 // 消息生产者组
 // 配置接口
 type IMessageProducerGroupConfig interface {
+	// ProducerSize
 	// 生产者数量
 	ProducerSize() int
+	// ProducerIds
 	// 生产者标识信息
 	ProducerIds() []string
 
+	// CreateProducer
 	// 创建一个生产者并加入组，id使用默认规则创建
 	// err:
 	// 		ErrProducerModeUnregister:	ProducerMode未注册
 	CreateProducer(mode ProducerMode) (producer IMessageProducer, err error)
+	// CreateProducers
 	// 创建多个生产者并加入组，id使用默认规则创建
 	// err:
 	// 		ErrProducerModeUnregister:	ProducerMode未注册
 	CreateProducers(modes []ProducerMode) (producers []IMessageProducer, err []error)
+	// AddProducer
 	// 加入一个生产者
 	// err:
 	// 		ErrProducerNil:			Producer为nil
 	//		ErrProducerIdExists:	ProducerId重复
 	AddProducer(producer IMessageProducer) error
+	// AddProducers
 	// 加入多个生产者
 	// count: 成功加入的生产者数量
 	// err:
 	// 		ErrProducerNil:			Producer为nil
 	//		ErrProducerIdExists:	ProducerId重复
 	AddProducers(producers []IMessageProducer) (count int, failArr []IMessageProducer, err []error)
+	// RemoveProducer
 	// 移除一个生产者
 	// producer: 返回被移除的生产者
 	// err:
 	//		ErrProducerIdUnknown:	ProducerId不存在
 	RemoveProducer(producerId string) (producer IMessageProducer, err error)
+	// RemoveProducers
 	// 移除多个生产者
 	// producers: 返回被移除的生产者数组
 	// err:
 	//		ErrProducerIdUnknown:	ProducerId不存在
 	RemoveProducers(producerIdArr []string) (producers []IMessageProducer, err []error)
+	// ClearProducers
 	// 清空
 	ClearProducers()
+	// UpdateProducer
 	// 替换一个生产者
 	// 根据ProducerId进行替换，如果找不到相同ProducerId，直接加入
 	// err:
 	// 		ErrProducerNil:			Producer为nil
 	UpdateProducer(producer IMessageProducer) (err error)
+	// UpdateProducers
 	// 替换一个生产者
 	// 根据ProducerId进行替换，如果找不到相同ProducerId，直接加入
 	// err:
 	// 		ErrProducerNil:			Producer为nil
 	UpdateProducers(producers []IMessageProducer) (err []error)
+	// InitProducerGroup
 	// 使用配置初始化生产者组，覆盖旧配置
 	InitProducerGroup(settings []ProducerSetting) (producers []IMessageProducer, err error)
+	// SetProducedFunc
 	// 设置响应行为
 	SetProducedFunc(f FuncOnMessageProduced, fs FuncOnMessagesProduced)
 }
 
+// IMessageProducerGroup
 // 消息生产者组
 // 操作接口
 type IMessageProducerGroup interface {
+	// Config
 	// 配置入口
 	Config() IMessageProducerGroupConfig
+	// GetProducer
 	// 取生成者
 	// err:
 	// 		ErrProducerIdUnknown:	ProducerId不存在
 	GetProducer(producerId string) (IMessageProducer, error)
+	// GetProducerAt
 	// 取生成者
 	// err:
 	// 		ErrProducerIndexRange:	index越界
 	GetProducerAt(index int) (IMessageProducer, error)
+	// NotifyMessageProduced
 	// 生产消息
 	// 抛出事件 EventMessageOnProducer
 	// err:
 	//		ErrProducerMessageNil:	msg为nil时
 	NotifyMessageProduced(msg message.IMessageContext, producerId string) error
+	// NotifyMessagesProduced
 	// 生产消息
 	// 抛出事件 EventMultiMessageOnProducer
 	// err:
@@ -100,6 +121,7 @@ type IMessageProducerGroup interface {
 	NotifyMessagesProduced(msg []message.IMessageContext, producerId string) error
 }
 
+// NewMessageProducerGroup
 // 实例化消息生产组
 // config: 	配置接口
 // group: 	操作接口

@@ -1,8 +1,9 @@
 package routing
 
 import (
-	"github.com/xuzhuoxi/infra-go/slicex"
 	"strings"
+
+	"github.com/xuzhuoxi/infra-go/slicex"
 )
 
 type wordsStrategy struct {
@@ -17,6 +18,7 @@ func (s *wordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 单词命中路由(大小写无关)
 // 空字符串忽略
 // routingKey和locateId只要命中其中一个，则判定为命中
@@ -75,6 +77,7 @@ func (s *caseWordsStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 单词命中路由(大小写相关)
 // 空字符串忽略
 // routingKey和locateId只要命中其中一个，则判定为命中
@@ -121,11 +124,13 @@ func (s *caseWordsStrategy) wordsMath(lowerKey string, result []string) []string
 
 //---------------------
 
+// NewWordsRoutingStrategy
 // 创建一个Words路由策略实例
 func NewWordsRoutingStrategy() IRoutingStrategy {
 	return &wordsStrategy{StrategyConfig: StrategyConfig{}}
 }
 
+// NewCaseWordsRoutingStrategy
 // 创建一个CaseWords路由策略实例
 func NewCaseWordsRoutingStrategy() IRoutingStrategy {
 	return &caseWordsStrategy{StrategyConfig: StrategyConfig{}}

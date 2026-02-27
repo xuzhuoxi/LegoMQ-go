@@ -2,10 +2,11 @@ package queue
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
 func TestUnsafeCache_ReadWriteContext(t *testing.T) {

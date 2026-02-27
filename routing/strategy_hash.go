@@ -16,6 +16,7 @@ func (s *hashStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 忽略locateId
 func (s *hashStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
 	s.Mu.RLock()
@@ -44,6 +45,7 @@ func (s *hashStrategy) md5Sum(key string, max int) int {
 
 //---------------------------------
 
+// NewHashAvgRoutingStrategy
 // 创建一个Hash分组的策略实例
 func NewHashAvgRoutingStrategy() IRoutingStrategy {
 	return &hashStrategy{StrategyConfig: StrategyConfig{}}

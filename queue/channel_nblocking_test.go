@@ -2,8 +2,9 @@ package queue
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"testing"
+
+	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
 func TestChannelNBlockingCache_ReadWriteContext(t *testing.T) {

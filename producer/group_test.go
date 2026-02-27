@@ -2,9 +2,10 @@ package producer
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/netx"
-	"testing"
 )
 
 var settings = []ProducerSetting{

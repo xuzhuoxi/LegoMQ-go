@@ -2,8 +2,9 @@ package broker
 
 import (
 	"errors"
-	"github.com/xuzhuoxi/infra-go/eventx"
 	"time"
+
+	"github.com/xuzhuoxi/infra-go/eventx"
 )
 
 var (

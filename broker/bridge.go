@@ -2,14 +2,15 @@ package broker
 
 import (
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/xuzhuoxi/LegoMQ-go/consumer"
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/producer"
 	"github.com/xuzhuoxi/LegoMQ-go/queue"
 	"github.com/xuzhuoxi/LegoMQ-go/routing"
 	"github.com/xuzhuoxi/infra-go/eventx"
-	"sync"
-	"time"
 )
 
 var (
@@ -26,34 +27,36 @@ var (
 )
 
 type iBridge interface {
-	// 设置路由模式
+	// SetRoutingMode 设置路由模式
 	// err:
 	//		ErrBridgeLinked: 		已经连接
 	// 		ErrRougingRegister:		路由模式未注册
 	SetRoutingMode(mode routing.RoutingMode) error
-	// 设置路由策略
+	// SetRoutingStrategy 设置路由策略
 	// err:
 	//		ErrBridgeLinked: 		已经连接
 	// 		ErrBridgeRoutingNil:	strategy=nil
 	SetRoutingStrategy(strategy routing.IRoutingStrategy) error
-	// 连接
+	// Link 连接
 	// err:
 	//		ErrBridgeLinked: 		已经连接
 	Link() error
-	// 取消连接
+	// Unlink 取消连接
 	// err:
 	//		ErrBridgeNotLinked: 	未连接
 	Unlink() error
 }
 
+// IBridgeProducer2Queue
 // Producer到Queue桥接器
 // 提供功能：
-// 		1.Producer消息捕捉
-//		2.消息路由
-// 		3.消息加入Queue
+//
+//	1.Producer消息捕捉
+//	2.消息路由
+//	3.消息加入Queue
 type IBridgeProducer2Queue interface {
 	iBridge
-	// 设置桥接点
+	// SetBridgePier 设置桥接点
 	// err:
 	//		ErrBridgeLinked: 		已经连接
 	//		ErrBridgeProducerNil: 	pierIn=nil
@@ -61,20 +64,22 @@ type IBridgeProducer2Queue interface {
 	SetBridgePier(pierIn producer.IMessageProducerGroup, pierOut queue.IMessageQueueGroup) error
 }
 
+// IBridgeQueue2Consumer
 // Queue到Consumer桥接器
 // 提供功能：
-// 		1.按时间片从Queue中提取消息
-//		2.消息路由
-// 		3.消息加入Consumer处理
+//
+//	1.按时间片从Queue中提取消息
+//	2.消息路由
+//	3.消息加入Consumer处理
 type IBridgeQueue2Consumer interface {
 	iBridge
-	// 设置桥接点
+	// SetBridgePier 设置桥接点
 	// err:
 	//		ErrBridgeLinked: 		已经连接
 	//		ErrBridgeQueueNil: 		pierIn=nil
 	//		ErrBridgeConsumerNil: 	pierOut=nil
 	SetBridgePier(pierIn queue.IMessageQueueGroup, pierOut consumer.IMessageConsumerGroup) error
-	// 初始化驱动器
+	// InitDriver 初始化驱动器
 	// duration: 频率
 	// quantity: 批量
 	// err:

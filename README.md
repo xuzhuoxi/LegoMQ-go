@@ -10,13 +10,13 @@ LegoMQ是一个使用go语言编写的消息中间件。具有高并发、高吞
 	 - [配置说明](#配置说明)
 		- [Broker配置](#Broker配置)
 		- [Producer配置](#Producer配置)
-		- [Consumer配置](#Consumer配置)
-		- [Queue配置](#Queue配置)
+        - [Queue配置](#Queue配置)
+        - [Consumer配置](#Consumer配置)
 		- [Broker的路由配置](#Broker的路由配置)
 	- [功能扩展](#功能扩展)
 		- [ProducerMode扩展](#ProducerMode扩展)
-		- [ConsumerMode扩展](#ConsumerMode扩展)
-		- [QueueMode扩展](#QueueMode扩展)
+        - [QueueMode扩展](#QueueMode扩展)
+        - [ConsumerMode扩展](#ConsumerMode扩展)
 		- [RoutingMode扩展](#RoutingMode扩展)
 - [示例](#示例)
 - [相关仓库](#相关仓库)
@@ -129,34 +129,6 @@ type BrokerSetting struct {
 	- LocalAddress<br>作为服务器的监听地址。
 	- 其它请查看[sock.go](https://github.com/xuzhuoxi/infra-go/blob/master/netx/sock.go)。
 
-#### Consumer配置
-
-消息消费者配置，定义如下：<br>	
-
-```
-type ConsumerSetting struct {
-	Id      string       // 标识
-	Mode    ConsumerMode // 消息生产者模式
-	Formats []string     // 格式匹配信息
-	
-	Log ConsumerSettingLog	//日志记录配置
-}
-```
-	
-- Id：<br>唯一标识，不能为空字符，多个Consumer间Id不能相同。Id不参与路由算法。
-- Mode：<br>Consumer的模式，目前已实现ClearConsumer、PrintConsumer、LogConsumer三种。如要扩展自定义模式，请查看[ConsumerMode扩展](#ConsumerMode扩展)。
-- Formats：<br>用于路由的格式匹配信息，具体表达方法因CosumerMode而异。
-- Log：<br>日志配置。定义如下：<br>
-	```
-	type ConsumerSettingLog struct {
-		Level  logx.LogLevel    // 默认日志等级
-		Config []logx.LogConfig // 日志配置
-	}
-	```
-		
-	- Level：<br>默认记录的日志等级。
-	- Config：<br>日志配置项目。
-	- 详细请查看[infra-go/logx](https://github.com/xuzhuoxi/infra-go/tree/master/logx)。
 
 #### Queue配置
 
@@ -177,6 +149,36 @@ type QueueSetting struct {
 - Size：<br>消息队列允许的最大容量。
 - LocateId：<br>用于标记当前Queue位置信息，多个Queue间LocateId可以相同，LocateId参与路由算法。
 - Formats：<br>用于路由的格式匹配信息，具体表达方法因CosumerMode而异。
+
+#### Consumer配置
+
+消息消费者配置，定义如下：<br>
+
+```
+type ConsumerSetting struct {
+	Id      string       // 标识
+	Mode    ConsumerMode // 消息生产者模式
+	Formats []string     // 格式匹配信息
+	
+	Log ConsumerSettingLog	//日志记录配置
+}
+```
+
+- Id：<br>唯一标识，不能为空字符，多个Consumer间Id不能相同。Id不参与路由算法。
+- Mode：<br>Consumer的模式，目前已实现ClearConsumer、PrintConsumer、LogConsumer三种。如要扩展自定义模式，请查看[ConsumerMode扩展](#ConsumerMode扩展)。
+- Formats：<br>用于路由的格式匹配信息，具体表达方法因CosumerMode而异。
+- Log：<br>日志配置。定义如下：<br>
+  ```
+  type ConsumerSettingLog struct {
+      Level  logx.LogLevel    // 默认日志等级
+      Config []logx.LogConfig // 日志配置
+  }
+  ```
+
+    - Level：<br>默认记录的日志等级。
+    - Config：<br>日志配置项目。
+    - 详细请查看[infra-go/logx](https://github.com/xuzhuoxi/infra-go/tree/master/logx)。
+
 
 #### Broker的路由配置
 
@@ -209,18 +211,18 @@ type BrokerRoutingSetting struct {
 3. 如果想同时增加对ProducerSetting的扩展支持，PX应该同时实现IProducerSettingSupport接口。并在InitProducer函数实现完成的初始化行为。
 4. 注册：调用`RegisterProducerMode`注册新模式实例的构造行为。
 
+#### QueueMode扩展
+
+1. 定义一个新的QueueMode，建议使用值与现有([查看queue.go](/queue/queue.go))不一致，也可以直接使用CustomizeQueue进行扩展。
+2. 创建新模式对应的结构体(假设为"QX")，实现IMessageContextQueue接口并完成逻辑开发。
+3. 注册：调用`RegisterQueueMode`注册新模式实例的构造行为。
+
 #### ConsumerMode扩展
 
 1. 定义一个新的ConsumerMode，建议使用值与现有([查看consumer.go](/consumer/consumer.go))不一致，也可以直接使用CustomizeConsumer进行扩展。
 2. 创建新模式对应的结构体(假设为"CX")，实现IMessageConsumer接口并完成逻辑开发。
 3. 如果想同时增加对ConsumerSetting的扩展支持，CX应该同时实现IConsumerSettingSupport接口。并在InitConsumer函数实现完成的初始化行为。
 4. 注册：调用`RegisterConsumerMode`注册新模式实例的构造行为。
-
-#### QueueMode扩展
-
-1. 定义一个新的QueueMode，建议使用值与现有([查看queue.go](/queue/queue.go))不一致，也可以直接使用CustomizeQueue进行扩展。
-2. 创建新模式对应的结构体(假设为"QX")，实现IMessageContextQueue接口并完成逻辑开发。
-3. 注册：调用`RegisterQueueMode`注册新模式实例的构造行为。
 
 #### RoutingMode扩展
 
@@ -230,7 +232,7 @@ type BrokerRoutingSetting struct {
 
 ## 示例
 
-- [http-log](examples/httplog)
+- [http-log](examples/server)
 	
 	监听http接收消息并进行log记录的例子。
 

@@ -2,8 +2,9 @@ package consumer
 
 import (
 	"fmt"
-	"github.com/xuzhuoxi/infra-go/logx"
 	"testing"
+
+	"github.com/xuzhuoxi/infra-go/logx"
 )
 
 func TestLogConsumer_ConsumeMessage(t *testing.T) {

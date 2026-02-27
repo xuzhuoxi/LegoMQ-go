@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"fmt"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 

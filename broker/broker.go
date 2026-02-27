@@ -1,40 +1,45 @@
 package broker
 
 import (
+	"sync"
+
 	"github.com/xuzhuoxi/LegoMQ-go/consumer"
 	"github.com/xuzhuoxi/LegoMQ-go/producer"
 	"github.com/xuzhuoxi/LegoMQ-go/queue"
-	"sync"
 )
 
+// IMQBrokerConfig
 // Broker操作接口
 // Broker配置接口
 type IMQBrokerConfig interface {
-	// producer组操作接口
+	// ProducerGroup producer组操作接口
 	ProducerGroup() (group producer.IMessageProducerGroup)
-	// producer组配置接口
+	// ProducerConfig producer组配置接口
 	ProducerConfig() (config producer.IMessageProducerGroupConfig)
-	// queue组操作接口
+	// QueueGroup queue组操作接口
 	QueueGroup() (group queue.IMessageQueueGroup)
-	// queue组配置接口
+	// QueueConfig queue组配置接口
 	QueueConfig() (config queue.IMessageQueueGroupConfig)
-	// consumer组操作接口
+	// ConsumerGroup consumer组操作接口
 	ConsumerGroup() (group consumer.IMessageConsumerGroup)
-	// consumer组配置接口
+	// ConsumerConfig consumer组配置接口
 	ConsumerConfig() (config consumer.IMessageConsumerGroupConfig)
-	// producer、queue、consumer间的连接接口
+	// Bridge producer、queue、consumer间的连接接口
 	Bridge() (p2q IBridgeProducer2Queue, q2c IBridgeQueue2Consumer)
-	// 初始化Broker
+	// InitBroker 初始化Broker
 	InitBroker(setting BrokerSetting) error
 }
 
 type IMQBroker interface {
+	// EngineStart
 	// 启动
+	// 把 Producer、Queue、Consumer 关联起来
 	EngineStart() error
-	// 停止
+	// EngineStop 停止
 	EngineStop() error
 }
 
+// NewMQBroker
 // 实例化一个MQBroker
 // config:	broker配置接口
 // broker:	broker操作接口

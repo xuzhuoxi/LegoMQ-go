@@ -2,12 +2,13 @@ package producer
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/infra-go/eventx"
 	"github.com/xuzhuoxi/infra-go/netx"
 	"github.com/xuzhuoxi/infra-go/netx/tcpx"
-	"testing"
-	"time"
 )
 
 func TestNewSockMessageProducer(t *testing.T) {
@@ -17,18 +18,20 @@ func TestNewSockMessageProducer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var sockHandler = func(data []byte, senderAddress string, other interface{}) (catch bool) {
-		msg := message.NewMessageContext("", senderAddress, nil, data)
+	var sockHandler = func(data []byte, connInfo netx.IConnInfo, other interface{}) (catch bool) {
+		msg := message.NewMessageContext("", connInfo.GetRemoteAddress(), nil, data)
 		producer.NotifyMessageProduced(msg)
 		return true
 	}
 
 	server.GetPackHandlerContainer().AppendPackHandler(sockHandler)
 	producer.AddEventListener(EventMessageOnProducer, onSockProduced)
-	err = producer.StartSockListener(netx.SockParams{LocalAddress: "127.0.0.1:9000"})
-	if nil != err {
-		t.Fatal(err)
-	}
+	go func() {
+		err = producer.StartSockListener(netx.SockParams{LocalAddress: "127.0.0.1:9000"})
+		if nil != err {
+			t.Fatal(err)
+		}
+	}()
 
 	client := tcpx.NewTCPClient()
 	err = client.OpenClient(netx.SockParams{RemoteAddress: "127.0.0.1:9000"})

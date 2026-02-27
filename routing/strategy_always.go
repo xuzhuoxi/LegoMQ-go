@@ -12,6 +12,7 @@ func (s *alwaysStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 忽略routingKey，locateId
 // 命中全部
 func (s *alwaysStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
@@ -33,6 +34,7 @@ func (s *alwaysStrategy) match(key string, format string) bool {
 
 //---------------------------------
 
+// NewAlwaysRoutingStrategy
 // 创建一个Always路由策略实例
 func NewAlwaysRoutingStrategy() IRoutingStrategy {
 	return &alwaysStrategy{StrategyConfig: StrategyConfig{}}

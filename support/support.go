@@ -4,11 +4,13 @@ import (
 	"github.com/xuzhuoxi/infra-go/lang/collectionx"
 )
 
+// IIdSupport
 // 标识支持接口
 // 提供Id读取与更改功能
 // 同范围内实例的Id不允许相同
 type IIdSupport collectionx.IOrderHashElement
 
+// ILocateSupport
 // 位置支持接口
 // 提供LocateId读取与更改功能
 // 同范围内实例的LocateId允许相同
@@ -17,6 +19,7 @@ type ILocateSupport interface {
 	SetLocateId(locateId string)
 }
 
+// IFormatsSupport
 // 格式匹配支持接口
 // 用于匹配对照
 type IFormatsSupport interface {

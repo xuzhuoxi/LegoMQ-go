@@ -1,8 +1,9 @@
 package queue
 
 import (
-	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"sync"
+
+	"github.com/xuzhuoxi/LegoMQ-go/message"
 )
 
 func NewSafeArrayQueue(maxSize int) (c IMessageContextQueue, err error) {

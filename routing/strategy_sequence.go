@@ -13,6 +13,7 @@ func (s *sequenceStrategy) Config() IRoutingStrategyConfig {
 	return s
 }
 
+// Route
 // 忽略routingKey，locateId
 // 列表循环命中
 func (s *sequenceStrategy) Route(routingKey string, locateId string) (targets []string, err error) {
@@ -35,6 +36,7 @@ func (s *sequenceStrategy) match(key string, format string) bool {
 
 //---------------------------------
 
+// NewSequenceRoutingStrategy
 // 创建一个顺序路由的策略实例
 func NewSequenceRoutingStrategy() IRoutingStrategy {
 	return &sequenceStrategy{StrategyConfig: StrategyConfig{}}

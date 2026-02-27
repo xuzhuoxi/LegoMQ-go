@@ -1,9 +1,10 @@
 package queue
 
 import (
+	"sync"
+
 	"github.com/xuzhuoxi/LegoMQ-go/message"
 	"github.com/xuzhuoxi/LegoMQ-go/support"
-	"sync"
 )
 
 func NewChannelNonBlockingQueue(maxSize int) (c IMessageContextQueue, err error) {
